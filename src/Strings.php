@@ -5,15 +5,18 @@
      * @param string $word
      * @return string
      */
-    function depluralize(string $word){
+    function depluralize($word){
         $rules = array(
-            'ss'  => false,
-            'os'  => 'o',
-            'ies' => 'y',
-            'xes' => 'x',
-            'oes' => 'o',
-            'ves' => 'f',
-            's'   => ''
+            'ss'   => false,
+            'os'   => 'o',
+            'ies'  => 'y',
+            'xes'  => 'x',
+            'oes'  => 'o',
+            'ves'  => 'f',
+            'ches' => 'ch',
+            'uses' => 'us',
+            'sses' => 'ss',
+            's'    => ''
         );
 
         foreach(array_keys($rules) as $key){
