@@ -21,6 +21,12 @@
     "autoload": {
         "psr-4" : {
             "Enobrev\\" : "src/"
-        }
+        },
+        "files": [
+            "src/Arrays.php",
+            "src/Debugging.php",
+            "src/Headers.php",
+            "src/Strings.php"
+        ]
     }
 }
