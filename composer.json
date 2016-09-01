@@ -23,6 +23,7 @@
             "Enobrev\\" : "src/"
         },
         "files": [
+            "src/ErrorsToExceptions.php",
             "src/Arrays.php",
             "src/Debugging.php",
             "src/Headers.php",
