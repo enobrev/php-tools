@@ -1,0 +1,20 @@
+{
+    "name": "enobrev/tools",
+    "description": "General Tools",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mark Armendariz",
+            "email": "src@enobrev.com"
+        }
+    ],
+    "require": {
+        "monolog/monolog": "^1.21"
+    },
+    "autoload": {
+        "psr-0" : {
+            "Enobrev" : "src"
+        }
+    }
+}
