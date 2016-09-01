@@ -19,8 +19,8 @@
         "monolog/monolog": "^1.21"
     },
     "autoload": {
-        "psr-0" : {
-            "Enobrev" : "src"
+        "psr-4" : {
+            "Enobrev\\" : "src/"
         }
     }
 }
