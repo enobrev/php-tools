@@ -9,6 +9,12 @@
             "email": "src@enobrev.com"
         }
     ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/enobrev/tools"
+        }
+    ],
     "require": {
         "monolog/monolog": "^1.21"
     },
