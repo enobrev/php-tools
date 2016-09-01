@@ -1,4 +1,8 @@
 <?php
+    namespace Enobrev;
+
+    use ErrorException;
+
     /**
      * http://us3.php.net/manual/en/function.set-error-handler.php#112881
      * throw exceptions based on E_* error types
