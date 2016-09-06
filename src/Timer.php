@@ -59,8 +59,7 @@
                 $iCount  = 0;
                 foreach($aTimers as &$aTimer) {
                     if (isset($aTimer['start'])) {
-                        $aTimer['range']       = $aTimer['stop'] - $aTimer['start'];
-                        $aTimer['range_human'] = sprintf("%01.2f", $aTimer['range']);
+                        $aTimer['range'] = $aTimer['stop'] - $aTimer['start'];
 
                         $iTotal += $aTimer['range'];
                         $iCount++;
@@ -69,10 +68,9 @@
 
                 $aReturn = [
                     'label'         => $sLabel,
-                    'total'         => $iTotal,
-                    'total_human'   => sprintf("%01.2f", $iTotal),
-                    'average'       => sprintf("%01.2f", $iTotal / $iCount),
-                    'count'         => $iCount
+                    'range'         => $iTotal,
+                    'count'         => $iCount,
+                    'average'       => $iTotal / $iCount
                 ];
 
                 if ($this->bReturnTimers) {
@@ -91,20 +89,18 @@
             $aReturn['__total__'] = array(
                 'count'         => 0,
                 'range'         => 0,
-                'range_human'   => "0.00",
                 'average'       => 0
             );
 
             foreach (array_keys($this->aTimers) as $sLabel) {
-                $aReturn[$sLabel] = $this->get($sLabel);
-                if ($aReturn[$sLabel]) {
-                    $aReturn['__total__']['range'] += $aReturn[$sLabel]['total'];
-                    $aReturn['__total__']['count'] += $aReturn[$sLabel]['count'];
+                $aTimers = $this->get($sLabel);
+                if ($aTimers) {
+                    $aReturn['__total__']['range'] += $aTimers['range'];
+                    $aReturn['__total__']['count'] += $aTimers['count'];
                 }
             }
 
-            $aReturn['__total__']['range_human'] = sprintf("%01.2f", $aReturn['__total__']['range']);
-            $aReturn['__total__']['average']     = sprintf("%01.2f", $aReturn['__total__']['range'] / $aReturn['__total__']['count']);
+            $aReturn['__total__']['average'] = $aReturn['__total__']['range'] / $aReturn['__total__']['count'];
 
             return $aReturn;
         }
