@@ -59,7 +59,11 @@
                 $iCount  = 0;
                 foreach($aTimers as &$aTimer) {
                     if (isset($aTimer['start'])) {
-                        $aTimer['range'] = $aTimer['stop'] - $aTimer['start'];
+                        if (isset($aTimer['stop'])) {
+                            $aTimer['range'] = $aTimer['stop'] - $aTimer['start'];
+                        } else {
+                            $aTimer['range'] = $this->getTime() - $aTimer['start'];
+                        }
 
                         $iTotal += $aTimer['range'];
                         $iCount++;
