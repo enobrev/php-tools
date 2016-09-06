@@ -238,12 +238,13 @@
          */
         private static function getRequestHash() {
             if (self::$sRequestHash == NULL) {
-                $oNow   = new DateTime();
                 $sIP    = get_ip();
                 $sAgent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
 
-                $aRequest = array(
-                    'date' => $oNow->format('Y-m-d G:i:s u')
+                $aMicroTime = explode(' ', microtime());
+                $oNow       = new DateTime($aMicroTime[1]);
+                $aRequest   = array(
+                    'date' => $oNow->format('Y-m-d H:i:s.' . $aMicroTime[0] * 1000000)
                 );
 
                 if (isset($_SERVER['HTTP_REFERER']))    { $aRequest['referrer']   = $_SERVER['HTTP_REFERER'];     }
