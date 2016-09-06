@@ -25,19 +25,17 @@
         /** @var Timer */
         private static $oTimer = null;
 
-        /** @var  Timer[] */
-        private static $aTimers = [];
-
         /** @var array[]  */
         private static $aRequests = [];
 
-        const FULL_TIMER = 'FULL_TIMER';
-
+        
         private static function init() {
             if (self::$oLog === null) {
                 if (self::$sName === null) {
                     throw new \Exception("Please set a Name for the Logger using Enobrev\\Log::setName()");
                 }
+
+                register_shutdown_function(array(self::class, 'shutdown'));
 
                 self::$oLog = new Monolog\Logger(self::$sName);
                 // $oFormatter = new LineFormatter("@cee: %context%");  // TODO: Activate @cee logger - will need to use config from build/ideas and add a mapper cron to ensure elasticsearch doesn't use resources trying to index all the response variables
@@ -197,14 +195,6 @@
         public static function stopTimer($sLabel) {
             if (self::$oTimer instanceof Timer) {
                 self::$oTimer->stop($sLabel);
-                $aTimer = self::$oTimer->get($sLabel);
-
-                if (!isset(self::$aTimers[$sLabel])) {
-                    self::$aTimers[$sLabel] = 0;
-                }
-
-                self::$aTimers[$sLabel] += $aTimer['range'];
-                return $aTimer['range'];
             }
         }
 
@@ -281,30 +271,29 @@
             return self::$sRequestHash;
         }
 
-        public function __destruct() {
-            try {
-                $sRequestHash = Log::getRequestHash();
-                $sThreadHash  = Log::getThreadHash();
-                $sParentHash  = Log::getParentHash();
+        public static function shutdown() {
+            $sRequestHash = Log::getRequestHash();
+            $sThreadHash  = Log::getThreadHash();
+            $sParentHash  = Log::getParentHash();
 
-                $aMessage = array(
-                    'action'    => 'Log.End',
-                    'meta'      => self::$aRequests[$sRequestHash],
-                    '__ms'      => self::stopTimer($sRequestHash),
-                    '__timers'  => self::$aTimers
-                );
+            self::stopTimer($sRequestHash);
+            $aTimers      = self::$oTimer->getAll();
 
-                if ($sThreadHash) {
-                    $aMessage['__t'] = $sThreadHash;
-                }
+            $aMessage = array(
+                'action'    => 'Log.End',
+                'meta'      => self::$aRequests[$sRequestHash],
+                '__ms'      => $aTimers['__total__']['range'],
+                '__timers'  => $aTimers
+            );
 
-                if ($sParentHash) {
-                    $aMessage['__p'] = $sParentHash;
-                }
-
-                return self::init()->addRecord(Monolog\Logger::INFO, $aMessage['action'], $aMessage);
-            } catch (\Exception $e) {
-                // do nothing
+            if ($sThreadHash) {
+                $aMessage['__t'] = $sThreadHash;
             }
+
+            if ($sParentHash) {
+                $aMessage['__p'] = $sParentHash;
+            }
+
+            self::init()->addRecord(Monolog\Logger::INFO, $aMessage['action'], $aMessage);
         }
     }
