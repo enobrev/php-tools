@@ -256,7 +256,7 @@
                 self::$sRequestHash = substr(hash('sha1', json_encode($aRequest)), 0, 8);
 
                 $aMessage = array(
-                    'action'    => 'Request Started',
+                    'action'    => 'Log.Start',
                     'meta'      => $aRequest,
                     '__r'       => self::$sRequestHash
                 );
@@ -288,7 +288,7 @@
                 $sParentHash  = Log::getParentHash();
 
                 $aMessage = array(
-                    'action'    => 'Request Ended',
+                    'action'    => 'Log.End',
                     'meta'      => self::$aRequests[$sRequestHash],
                     '__ms'      => self::stopTimer($sRequestHash),
                     '__timers'  => self::$aTimers
