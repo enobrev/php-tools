@@ -67,7 +67,6 @@
                 }
 
                 $aReturn = [
-                    'label'         => $sLabel,
                     'range'         => $iTotal,
                     'count'         => $iCount,
                     'average'       => $iTotal / $iCount
