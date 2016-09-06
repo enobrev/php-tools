@@ -181,7 +181,7 @@
         /**
          * @param $sLabel
          */
-        private static function startTimer($sLabel) {
+        public static function startTimer($sLabel) {
             if (self::$oTimer instanceof Timer === false) {
                 self::$oTimer = new Timer();
             }
@@ -194,7 +194,7 @@
          *
          * @return float
          */
-        private static function stopTimer($sLabel) {
+        public static function stopTimer($sLabel) {
             if (self::$oTimer instanceof Timer) {
                 self::$oTimer->stop($sLabel);
                 $aTimer = self::$oTimer->get($sLabel);
