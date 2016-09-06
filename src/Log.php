@@ -28,7 +28,7 @@
         /** @var array[]  */
         private static $aRequests = [];
 
-        
+
         private static function init() {
             if (self::$oLog === null) {
                 if (self::$sName === null) {
@@ -58,9 +58,18 @@
          */
         private static function addRecord($iLevel, $sMessage, array $aContext = array()) {
             $aContext        = array_merge(['action' => $sMessage], $aContext);
-            $aContext['__r'] = self::getRequestHash();
-            $aContext['__t'] = self::getThreadHash();
-            $aContext['__p'] = self::getParentHash();
+
+            if ($sRequestHash = self::getRequestHash()) {
+                $aContext['__r'] = $sRequestHash;
+            }
+
+            if ($sThreadHash = self::getThreadHash()) {
+                $aContext['__t'] = $sThreadHash;
+            }
+
+            if ($sParentHash = self::getParentHash()) {
+                $aContext['__p'] = $sParentHash;
+            }
 
             return self::init()->addRecord($iLevel, $sMessage, $aContext);
         }
@@ -96,7 +105,7 @@
          * @return Boolean Whether the record has been processed
          */
         public static function d($sMessage, array $aContext = array()) {
-            self::addRecord(Monolog\Logger::DEBUG, $sMessage, $aContext);
+            return self::addRecord(Monolog\Logger::DEBUG, $sMessage, $aContext);
         }
 
         /**
@@ -107,7 +116,7 @@
          * @return Boolean Whether the record has been processed
          */
         public static function i($sMessage, array $aContext = array()) {
-            self::addRecord(Monolog\Logger::INFO, $sMessage, $aContext);
+            return self::addRecord(Monolog\Logger::INFO, $sMessage, $aContext);
         }
 
         /**
@@ -118,7 +127,7 @@
          * @return Boolean Whether the record has been processed
          */
         public static function n($sMessage, array $aContext = array()) {
-            self::addRecord(Monolog\Logger::NOTICE, $sMessage, $aContext);
+            return self::addRecord(Monolog\Logger::NOTICE, $sMessage, $aContext);
         }
 
         /**
@@ -129,7 +138,7 @@
          * @return Boolean Whether the record has been processed
          */
         public static function w($sMessage, array $aContext = array()) {
-            self::addRecord(Monolog\Logger::WARNING, $sMessage, $aContext);
+            return self::addRecord(Monolog\Logger::WARNING, $sMessage, $aContext);
         }
 
         /**
@@ -140,7 +149,7 @@
          * @return Boolean Whether the record has been processed
          */
         public static function e($sMessage, array $aContext = array()) {
-            self::addRecord(Monolog\Logger::ERROR, $sMessage, $aContext);
+            return self::addRecord(Monolog\Logger::ERROR, $sMessage, $aContext);
         }
 
         /**
@@ -151,7 +160,7 @@
          * @return Boolean Whether the record has been processed
          */
         public static function c($sMessage, array $aContext = array()) {
-            self::addRecord(Monolog\Logger::CRITICAL, $sMessage, $aContext);
+            return self::addRecord(Monolog\Logger::CRITICAL, $sMessage, $aContext);
         }
 
         /**
@@ -162,7 +171,7 @@
          * @return Boolean Whether the record has been processed
          */
         public static function a($sMessage, array $aContext = array()) {
-            self::addRecord(Monolog\Logger::CRITICAL, $sMessage, $aContext);
+            return self::addRecord(Monolog\Logger::CRITICAL, $sMessage, $aContext);
         }
 
         /**
@@ -173,7 +182,7 @@
          * @return Boolean Whether the record has been processed
          */
         public static function em($sMessage, array $aContext = array()) {
-            self::addRecord(Monolog\Logger::EMERGENCY, $sMessage, $aContext);
+            return self::addRecord(Monolog\Logger::EMERGENCY, $sMessage, $aContext);
         }
 
         /**
@@ -253,14 +262,11 @@
 
                 self::$aRequests[self::$sRequestHash] = $aRequest;
 
-                $sThreadHash = Log::getThreadHash();
-                $sParentHash = Log::getParentHash();
-
-                if ($sThreadHash) {
+                if ($sThreadHash = Log::getThreadHash()) {
                     $aMessage['__t'] = $sThreadHash;
                 }
 
-                if ($sParentHash) {
+                if ($sParentHash = Log::getParentHash()) {
                     $aMessage['__p'] = $sParentHash;
                 }
 
@@ -273,11 +279,9 @@
 
         public static function shutdown() {
             $sRequestHash = Log::getRequestHash();
-            $sThreadHash  = Log::getThreadHash();
-            $sParentHash  = Log::getParentHash();
 
             self::stopTimer($sRequestHash);
-            $aTimers      = self::$oTimer->getAll();
+            $aTimers = self::$oTimer->getAll();
 
             $aMessage = array(
                 'action'    => 'Log.End',
@@ -286,11 +290,11 @@
                 '__timers'  => $aTimers
             );
 
-            if ($sThreadHash) {
+            if ($sThreadHash  = Log::getThreadHash()) {
                 $aMessage['__t'] = $sThreadHash;
             }
 
-            if ($sParentHash) {
+            if ($sParentHash  = Log::getParentHash()) {
                 $aMessage['__p'] = $sParentHash;
             }
 
