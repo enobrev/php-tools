@@ -4,11 +4,34 @@
     use Monolog;
     use Monolog\Formatter\LineFormatter;
     use Monolog\Handler\SyslogHandler;
+    use DateTime;
 
     class Log {
         /** @var Monolog\Logger */
         private static $oLog  = null;
+
+        /** @var string */
         private static $sName = null;
+
+        /** @var string */
+        private static $sRequestHash = null;
+
+        /** @var string */
+        private static $sThreadHash = null;
+
+        /** @var array  */
+        private static $aHashHistory = [];
+
+        /** @var Timer */
+        private static $oTimer = null;
+
+        /** @var  Timer[] */
+        private static $aTimers = [];
+
+        /** @var array[]  */
+        private static $aRequests = [];
+
+        const FULL_TIMER = 'FULL_TIMER';
 
         private static function init() {
             if (self::$oLog === null) {
@@ -36,7 +59,12 @@
          * @return Boolean Whether the record has been processed
          */
         private static function addRecord($iLevel, $sMessage, array $aContext = array()) {
-            return self::init()->addRecord($iLevel, $sMessage, array_merge(['action' => $sMessage], $aContext));
+            $aContext        = array_merge(['action' => $sMessage], $aContext);
+            $aContext['__r'] = self::getRequestHash();
+            $aContext['__t'] = self::getThreadHash();
+            $aContext['__p'] = self::getParentHash();
+
+            return self::init()->addRecord($iLevel, $sMessage, $aContext);
         }
 
         /**
@@ -44,6 +72,22 @@
          */
         public static function setName(string $sName) {
             self::$sName = $sName;
+        }
+
+        /**
+         * Sets the Parent Hash to the current Hash, and then resets the Request Hash
+         */
+        public static function startChildRequest() {
+            self::$aHashHistory[] = self::getRequestHash();
+            self::$sRequestHash = null;
+        }
+
+        /**
+         * Retrieves the previous request hash
+         */
+        public static function endChildRequest() {
+            self::stopTimer(self::$sRequestHash);
+            self::$sRequestHash = array_pop(self::$aHashHistory);
         }
 
         /**
@@ -132,5 +176,135 @@
          */
         public static function em($sMessage, array $aContext = array()) {
             self::addRecord(Monolog\Logger::EMERGENCY, $sMessage, $aContext);
+        }
+
+        /**
+         * @param $sLabel
+         */
+        private static function startTimer($sLabel) {
+            if (self::$oTimer instanceof Timer === false) {
+                self::$oTimer = new Timer();
+            }
+
+            self::$oTimer->start($sLabel);
+        }
+
+        /**
+         * @param $sLabel
+         *
+         * @return float
+         */
+        private static function stopTimer($sLabel) {
+            if (self::$oTimer instanceof Timer) {
+                self::$oTimer->stop($sLabel);
+                $aTimer = self::$oTimer->get($sLabel);
+
+                if (!isset(self::$aTimers[$sLabel])) {
+                    self::$aTimers[$sLabel] = 0;
+                }
+
+                self::$aTimers[$sLabel] += $aTimer['range'];
+                return $aTimer['range'];
+            }
+        }
+
+        /**
+         * @return string
+         */
+        private static function getThreadHash() {
+            if (self::$sThreadHash !== NULL) {
+                // Fall Through
+            } else if (isset($_REQUEST['__t'])) {
+                self::$sThreadHash = $_REQUEST['__t'];
+            } else {
+                self::$sThreadHash = substr(hash('sha1', (new DateTime())->format('Y-m-d G:i:s u')), 0, 6);
+            }
+
+            return self::$sThreadHash;
+        }
+
+        /**
+         * @return string
+         */
+        private static function getParentHash() {
+            $iHashHistory = count(self::$aHashHistory);
+            if ($iHashHistory > 0) {
+                return self::$aHashHistory[$iHashHistory - 1];
+            }
+        }
+
+        /**
+         * @internal param bool $bForceReset
+         * @return string
+         */
+        private static function getRequestHash() {
+            if (self::$sRequestHash == NULL) {
+                $oNow   = new DateTime();
+                $sIP    = get_ip();
+                $sAgent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+
+                $aRequest = array(
+                    'date' => $oNow->format('Y-m-d G:i:s u')
+                );
+
+                if (isset($_SERVER['HTTP_REFERER']))    { $aRequest['referrer']   = $_SERVER['HTTP_REFERER'];     }
+                if (isset($_SERVER['REQUEST_URI']))     { $aRequest['uri']        = $_SERVER['REQUEST_URI'];      }
+                if (isset($_SERVER['HTTP_HOST']))       { $aRequest['host']       = $_SERVER['HTTP_HOST'];        }
+                if (strlen($sAgent))                    { $aRequest['agent']      = $sAgent;                      }
+                if ($sIP != 'unknown')                  { $aRequest['ip']         = $sIP;                         }
+
+                self::$sRequestHash = substr(hash('sha1', json_encode($aRequest)), 0, 8);
+
+                $aMessage = array(
+                    'action'    => 'Request Started',
+                    'meta'      => $aRequest,
+                    '__r'       => self::$sRequestHash
+                );
+
+                self::$aRequests[self::$sRequestHash] = $aRequest;
+
+                $sThreadHash = Log::getThreadHash();
+                $sParentHash = Log::getParentHash();
+
+                if ($sThreadHash) {
+                    $aMessage['__t'] = $sThreadHash;
+                }
+
+                if ($sParentHash) {
+                    $aMessage['__p'] = $sParentHash;
+                }
+
+                self::startTimer(self::$sRequestHash);
+                return self::init()->addRecord(Monolog\Logger::INFO, $aMessage['action'], $aMessage);
+            }
+
+            return self::$sRequestHash;
+        }
+
+        public function __destruct() {
+            try {
+                $sRequestHash = Log::getRequestHash();
+                $sThreadHash  = Log::getThreadHash();
+                $sParentHash  = Log::getParentHash();
+
+                $aMessage = array(
+                    'action'    => 'Request Ended',
+                    'meta'      => self::$aRequests[$sRequestHash],
+                    '__ms'      => self::stopTimer($sRequestHash),
+                    '__timers'  => self::$aTimers
+                );
+
+                if ($sThreadHash) {
+                    $aMessage['__t'] = $sThreadHash;
+                }
+
+                if ($sParentHash) {
+                    $aMessage['__p'] = $sParentHash;
+                }
+
+                return self::init()->addRecord(Monolog\Logger::INFO, $aMessage['action'], $aMessage);
+            } catch (\Exception $e) {
+                // do nothing
+            }
         }
     }
