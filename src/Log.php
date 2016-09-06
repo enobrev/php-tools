@@ -242,9 +242,9 @@
                 $sAgent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
 
                 $aMicroTime = explode(' ', microtime());
-                $oNow       = new DateTime($aMicroTime[1]);
+                $oNow       = new DateTime(date('Y-m-d H:i:s.' . $aMicroTime[0] * 1000000, $aMicroTime[1]));
                 $aRequest   = array(
-                    'date' => $oNow->format('Y-m-d H:i:s.' . $aMicroTime[0] * 1000000)
+                    'date' => $oNow->format('Y-m-d H:i:s.u')
                 );
 
                 if (isset($_SERVER['HTTP_REFERER']))    { $aRequest['referrer']   = $_SERVER['HTTP_REFERER'];     }
