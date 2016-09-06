@@ -93,10 +93,10 @@
             );
 
             foreach (array_keys($this->aTimers) as $sLabel) {
-                $aTimers = $this->get($sLabel);
-                if ($aTimers) {
-                    $aReturn['__total__']['range'] += $aTimers['range'];
-                    $aReturn['__total__']['count'] += $aTimers['count'];
+                $aReturn[$sLabel] = $this->get($sLabel);
+                if ($aReturn[$sLabel]) {
+                    $aReturn['__total__']['range'] += $aReturn[$sLabel]['range'];
+                    $aReturn['__total__']['count'] += $aReturn[$sLabel]['count'];
                 }
             }
 
