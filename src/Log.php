@@ -286,6 +286,7 @@
             $aMessage = array(
                 'action'    => 'Log.End',
                 'meta'      => self::$aRequests[$sRequestHash],
+                '__r'       => $sRequestHash,
                 '__ms'      => $aTimers['__total__']['range'],
                 '__timers'  => $aTimers
             );
