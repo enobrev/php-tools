@@ -216,7 +216,7 @@
             } else if (isset($_REQUEST['__t'])) {
                 self::$sThreadHash = $_REQUEST['__t'];
             } else {
-                self::$sThreadHash = substr(hash('sha1', (new DateTime())->format('Y-m-d G:i:s u')), 0, 6);
+                self::$sThreadHash = substr(hash('sha1', notNowByRightNow()->format('Y-m-d G:i:s.u')), 0, 6);
             }
 
             return self::$sThreadHash;
@@ -233,6 +233,13 @@
         }
 
         /**
+         * @return string
+         */
+        private static function getParentPath() {
+            return implode('.', self::$aHashHistory);
+        }
+
+        /**
          * @internal param bool $bForceReset
          * @return string
          */
@@ -241,10 +248,8 @@
                 $sIP    = get_ip();
                 $sAgent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
 
-                $aMicroTime = explode(' ', microtime());
-                $oNow       = new DateTime(date('Y-m-d H:i:s.' . $aMicroTime[0] * 1000000, $aMicroTime[1]));
                 $aRequest   = array(
-                    'date' => $oNow->format('Y-m-d H:i:s.u')
+                    'date' => notNowByRightNow()->format('Y-m-d H:i:s.u')
                 );
 
                 if (isset($_SERVER['HTTP_REFERER']))    { $aRequest['referrer']   = $_SERVER['HTTP_REFERER'];     }
@@ -253,7 +258,7 @@
                 if (strlen($sAgent))                    { $aRequest['agent']      = $sAgent;                      }
                 if ($sIP != 'unknown')                  { $aRequest['ip']         = $sIP;                         }
 
-                self::$sRequestHash = substr(hash('sha1', json_encode($aRequest)), 0, 8);
+                self::$sRequestHash = self::getParentPath() . '.' . substr(hash('sha1', json_encode($aRequest)), 0, 6);
 
                 $aMessage = array(
                     'action'    => 'Log.Start',

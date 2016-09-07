@@ -25,6 +25,7 @@
         "files": [
             "src/ErrorsToExceptions.php",
             "src/Arrays.php",
+            "src/DateTime.php",
             "src/Debugging.php",
             "src/Headers.php",
             "src/Strings.php"
