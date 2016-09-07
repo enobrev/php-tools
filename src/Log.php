@@ -236,7 +236,11 @@
          * @return string
          */
         private static function getParentPath() {
-            return implode('.', self::$aHashHistory) . '.';
+            if (count(self::$aHashHistory)) {
+                return implode('.', self::$aHashHistory) . '.';
+            }
+
+            return '';
         }
 
         /**
