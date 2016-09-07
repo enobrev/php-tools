@@ -236,7 +236,7 @@
          * @return string
          */
         private static function getParentPath() {
-            return implode('.', self::$aHashHistory);
+            return implode('.', self::$aHashHistory) . '.';
         }
 
         /**
@@ -258,7 +258,7 @@
                 if (strlen($sAgent))                    { $aRequest['agent']      = $sAgent;                      }
                 if ($sIP != 'unknown')                  { $aRequest['ip']         = $sIP;                         }
 
-                self::$sRequestHash = self::getParentPath() . '.' . substr(hash('sha1', json_encode($aRequest)), 0, 6);
+                self::$sRequestHash = self::getParentPath() . substr(hash('sha1', json_encode($aRequest)), 0, 6);
 
                 $aMessage = array(
                     'action'    => 'Log.Start',
