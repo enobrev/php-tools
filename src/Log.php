@@ -4,7 +4,6 @@
     use Monolog;
     use Monolog\Formatter\LineFormatter;
     use Monolog\Handler\SyslogHandler;
-    use DateTime;
 
     class Log {
         /** @var Monolog\Logger */
