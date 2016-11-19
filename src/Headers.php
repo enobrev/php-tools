@@ -26,10 +26,13 @@
      * @return string
      */
     function get_ip() {
-        if (isCli() && isset($_SERVER['SERVER_ADDR'])) {
+        $bIsCLI = isCli();
+        if ($bIsCLI && isset($_SERVER['SERVER_ADDR'])) {
             $sIP = $_SERVER['SERVER_ADDR'];
-        } else if (isCli() && isset($_SERVER['LOCAL_ADDR'])) {
+        } else if ($bIsCLI && isset($_SERVER['LOCAL_ADDR'])) {
             $sIP = $_SERVER['LOCAL_ADDR'];
+        } else if ($bIsCLI) {
+            $sIP = gethostbyname(gethostname());
         } else if (isset($_SERVER["HTTP_X_REAL_IP"]) && $_SERVER['REMOTE_ADDR'] && strcasecmp($_SERVER['REMOTE_ADDR'], "unknown")) {
             $sIP = $_SERVER["HTTP_X_REAL_IP"]; // explicitly set in nginx load balancer
         } else if (getenv("HTTP_CLIENT_IP") && strcasecmp(getenv("HTTP_CLIENT_IP"), "unknown")) {
