@@ -119,13 +119,16 @@
 
         /**
          * @param string $sLabel
+         * @return int float
          */
         public function stop($sLabel) {
-            $this->aTimers[$sLabel][$this->aIndices[$sLabel]]['stop'] = $this->getTime();
+            $iIndex = $this->aIndices[$sLabel];
+            $this->aTimers[$sLabel][$iIndex]['stop'] = $this->getTime();
+            return $this->aTimers[$sLabel][$iIndex]['stop'] - $this->aTimers[$sLabel][$iIndex]['start'];
         }
 
         /**
-         * @return mixed
+         * @return float
          */
         private function getTime() {
             return microtime(true) * 1000;

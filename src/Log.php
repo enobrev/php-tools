@@ -12,6 +12,9 @@
         /** @var string */
         private static $sName = null;
 
+        /** @var bool */
+        private static $bJSONLogs = false;
+
         /** @var string */
         private static $sRequestHash = null;
 
@@ -37,8 +40,13 @@
                 register_shutdown_function(array(self::class, 'shutdown'));
 
                 self::$oLog = new Monolog\Logger(self::$sName);
-                // $oFormatter = new LineFormatter("@cee: %context%");  // TODO: Activate @cee logger - will need to use config from build/ideas and add a mapper cron to ensure elasticsearch doesn't use resources trying to index all the response variables
-                $oFormatter = new LineFormatter("%context%");
+
+                if (self::$bJSONLogs) {
+                    $oFormatter = new LineFormatter("@cee: %context%");
+                } else {
+                    $oFormatter = new LineFormatter("%context%");
+                }
+
                 $oSyslog    = new SyslogHandler('API');
                 $oSyslog->setFormatter($oFormatter);
                 self::$oLog->pushHandler($oSyslog);
@@ -59,15 +67,15 @@
             $aContext        = array_merge(['action' => $sMessage], $aContext);
 
             if ($sRequestHash = self::getRequestHash()) {
-                $aContext['__r'] = $sRequestHash;
+                $aContext['--r'] = $sRequestHash;
             }
 
             if ($sThreadHash = self::getThreadHash()) {
-                $aContext['__t'] = $sThreadHash;
+                $aContext['--t'] = $sThreadHash;
             }
 
             if ($sParentHash = self::getParentHash()) {
-                $aContext['__p'] = $sParentHash;
+                $aContext['--p'] = $sParentHash;
             }
 
             return self::init()->addRecord($iLevel, $sMessage, $aContext);
@@ -78,6 +86,10 @@
          */
         public static function setName(string $sName) {
             self::$sName = $sName;
+        }
+
+        public static function enableJSON() {
+            self::$bJSONLogs = true;
         }
 
         /**
@@ -202,7 +214,7 @@
          */
         public static function stopTimer($sLabel) {
             if (self::$oTimer instanceof Timer) {
-                self::$oTimer->stop($sLabel);
+                return self::$oTimer->stop($sLabel);
             }
         }
 
@@ -212,8 +224,8 @@
         private static function getThreadHash() {
             if (self::$sThreadHash !== NULL) {
                 // Fall Through
-            } else if (isset($_REQUEST['__t'])) {
-                self::$sThreadHash = $_REQUEST['__t'];
+            } else if (isset($_REQUEST['--t'])) {
+                self::$sThreadHash = $_REQUEST['--t'];
             } else {
                 self::$sThreadHash = substr(hash('sha1', notNowByRightNow()->format('Y-m-d G:i:s.u')), 0, 6);
             }
@@ -266,21 +278,21 @@
                 $aMessage = array(
                     'action'    => 'Log.Start',
                     'meta'      => $aRequest,
-                    '__r'       => self::$sRequestHash
+                    '--r'       => self::$sRequestHash
                 );
 
                 self::$aRequests[self::$sRequestHash] = $aRequest;
 
                 if ($sThreadHash = Log::getThreadHash()) {
-                    $aMessage['__t'] = $sThreadHash;
+                    $aMessage['--t'] = $sThreadHash;
                 }
 
                 if ($sParentHash = Log::getParentHash()) {
-                    $aMessage['__p'] = $sParentHash;
+                    $aMessage['--p'] = $sParentHash;
                 }
 
                 self::startTimer(self::$sRequestHash);
-                return self::init()->addRecord(Monolog\Logger::INFO, $aMessage['action'], $aMessage);
+                self::init()->addRecord(Monolog\Logger::INFO, $aMessage['action'], $aMessage);
             }
 
             return self::$sRequestHash;
@@ -293,19 +305,20 @@
             $aTimers = self::$oTimer->getAll();
 
             $aMessage = array(
-                'action'    => 'Log.End',
-                'meta'      => self::$aRequests[$sRequestHash],
-                '__r'       => $sRequestHash,
-                '__ms'      => $aTimers['__total__']['range'],
-                '__timers'  => $aTimers
+                'action'     => 'Log.End',
+                'meta'       => self::$aRequests[$sRequestHash],
+                '--r'        => $sRequestHash,
+                '--ms'       => $aTimers['__total__']['range'],
+                '--timer'    => $aTimers['__total__'],
+                '--timers'   => json_encode($aTimers)
             );
 
             if ($sThreadHash  = Log::getThreadHash()) {
-                $aMessage['__t'] = $sThreadHash;
+                $aMessage['--t'] = $sThreadHash;
             }
 
             if ($sParentHash  = Log::getParentHash()) {
-                $aMessage['__p'] = $sParentHash;
+                $aMessage['--p'] = $sParentHash;
             }
 
             self::init()->addRecord(Monolog\Logger::INFO, $aMessage['action'], $aMessage);
