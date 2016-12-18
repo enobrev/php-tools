@@ -2,30 +2,17 @@
     namespace Enobrev;
 
     /**
-     * @param string $word
+     * @param string $sWord
      * @return string
      */
-    function depluralize($word){
-        $rules = array(
-            'ss'   => false,
-            'os'   => 'o',
-            'ies'  => 'y',
-            'xes'  => 'x',
-            'oes'  => 'o',
-            'ves'  => 'f',
-            'ches' => 'ch',
-            'uses' => 'us',
-            'sses' => 'ss',
-            's'    => ''
-        );
+    function depluralize(string $sWord) : string {
+        return Inflect::singularize($sWord);
+    }
 
-        foreach(array_keys($rules) as $key){
-            if(substr($word, (strlen($key) * -1)) != $key)
-                continue;
-            if($key === false)
-                return $word;
-            return substr($word, 0, strlen($word) - strlen($key)) . $rules[$key];
-        }
-
-        return $word;
+    /**
+     * @param string $sWord
+     * @return string
+     */
+    function pluralize(string $sWord): string {
+        return Inflect::pluralize($sWord);
     }
