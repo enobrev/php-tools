@@ -15,6 +15,9 @@
         /** @var bool */
         private static $bJSONLogs = false;
 
+        /** @var int */
+        private static $iLogIndex = null;
+
         /** @var string */
         private static $sRequestHash = null;
 
@@ -77,6 +80,8 @@
             if ($sParentHash = self::getParentHash()) {
                 $aContext['--p'] = $sParentHash;
             }
+
+            $aContext['--i'] = self::getLogIndex();
 
             return self::init()->addRecord($iLevel, $sMessage, $aContext);
         }
@@ -246,6 +251,18 @@
         /**
          * @return string
          */
+        private static function getLogIndex() {
+            if (self::$iLogIndex === null) {
+                self::$iLogIndex = 0;
+            }
+
+            self::$iLogIndex++;
+            return self::$iLogIndex;
+        }
+
+        /**
+         * @return string
+         */
         private static function getParentPath() {
             if (count(self::$aHashHistory)) {
                 return implode('.', self::$aHashHistory) . '.';
@@ -291,6 +308,12 @@
                     $aMessage['--p'] = $sParentHash;
                 }
 
+                if (!self::$iLogIndex) {
+                    self::$iLogIndex = 1;
+                }
+
+                $aMessage['--i'] = self::getLogIndex();
+
                 self::startTimer(self::$sRequestHash);
                 self::init()->addRecord(Monolog\Logger::INFO, $aMessage['action'], $aMessage);
             }
@@ -320,6 +343,8 @@
             if ($sParentHash  = Log::getParentHash()) {
                 $aMessage['--p'] = $sParentHash;
             }
+
+            $aMessage['--i'] = self::getLogIndex();
 
             self::init()->addRecord(Monolog\Logger::INFO, $aMessage['action'], $aMessage);
         }
