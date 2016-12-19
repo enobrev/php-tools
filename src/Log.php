@@ -77,18 +77,7 @@
          * @return Boolean Whether the record has been processed
          */
         private static function addRecord($iLevel, $sMessage, array $aContext = array()) {
-            $aLog = ['action' => $sMessage];
-
-            if ($aContext && is_array($aContext) && count($aContext)) {
-                foreach ($aContext as $sKey => $mValue) {
-                    if (strncmp($sKey, "--", 2) === 0) {
-                        $aLog[$sKey] = $mValue;
-                        unset($aContext[$sKey]);
-                    }
-                }
-
-                self::assignArrayByPath($aLog, $sMessage, $aContext);
-            }
+            $aLog = self::prepareContext($sMessage, $aContext);
 
             if ($sRequestHash = self::getRequestHash()) {
                 $aLog['--r'] = $sRequestHash;
@@ -105,6 +94,28 @@
             $aLog['--i'] = self::getLogIndex();
 
             return self::init()->addRecord($iLevel, $sMessage, $aLog);
+        }
+
+        /**
+         * @param       $sMessage
+         * @param array $aContext
+         * @return array
+         */
+        private static function prepareContext($sMessage, array $aContext = []) {
+            $aLog = ['action' => $sMessage];
+
+            if ($aContext && is_array($aContext) && count($aContext)) {
+                foreach ($aContext as $sKey => $mValue) {
+                    if (strncmp($sKey, "--", 2) === 0) {
+                        $aLog[$sKey] = $mValue;
+                        unset($aContext[$sKey]);
+                    }
+                }
+
+                self::assignArrayByPath($aLog, $sMessage, $aContext);
+            }
+
+            return $aLog;
         }
 
         /**
@@ -313,11 +324,10 @@
 
                 self::$sRequestHash = self::getParentPath() . substr(hash('sha1', json_encode($aRequest)), 0, 6);
 
-                $aMessage = array(
-                    'action'    => 'Log.Start',
-                    'meta'      => $aRequest,
-                    '--r'       => self::$sRequestHash
-                );
+                $aMessage = self::prepareContext('Log.Start', [
+                    'meta' => $aRequest,
+                    '--r'  => self::$sRequestHash
+                ]);
 
                 self::$aRequests[self::$sRequestHash] = $aRequest;
 
@@ -348,14 +358,13 @@
             self::stopTimer($sRequestHash);
             $aTimers = self::$oTimer->getAll();
 
-            $aMessage = array(
-                'action'     => 'Log.End',
-                'meta'       => self::$aRequests[$sRequestHash],
-                '--r'        => $sRequestHash,
-                '--ms'       => $aTimers['__total__']['range'],
-                '--timer'    => $aTimers['__total__'],
-                '--timers'   => json_encode($aTimers)
-            );
+            $aMessage = self::prepareContext('Log.End', [
+                'meta'     => self::$aRequests[$sRequestHash],
+                '--r'      => $sRequestHash,
+                '--ms'     => $aTimers['__total__']['range'],
+                '--timer'  => $aTimers['__total__'],
+                '--timers' => json_encode($aTimers)
+            ]);
 
             if ($sThreadHash  = Log::getThreadHash()) {
                 $aMessage['--t'] = $sThreadHash;
