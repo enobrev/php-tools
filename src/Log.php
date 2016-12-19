@@ -67,7 +67,7 @@
          * @return Boolean Whether the record has been processed
          */
         private static function addRecord($iLevel, $sMessage, array $aContext = array()) {
-            $aContext        = array_merge(['action' => $sMessage], $aContext);
+            $aContext        = array_merge(['action' => $sMessage], [$sMessage => $aContext]);
 
             if ($sRequestHash = self::getRequestHash()) {
                 $aContext['--r'] = $sRequestHash;
