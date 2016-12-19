@@ -102,7 +102,7 @@
          * @return array
          */
         private static function prepareContext($sMessage, array $aContext = []) {
-            $aLog = ['action' => $sMessage];
+            $aLog = ['--action' => $sMessage];
 
             if ($aContext && is_array($aContext) && count($aContext)) {
                 foreach ($aContext as $sKey => $mValue) {
@@ -346,7 +346,7 @@
                 $aMessage['--i'] = self::getLogIndex();
 
                 self::startTimer(self::$sRequestHash);
-                self::init()->addRecord(Monolog\Logger::INFO, $aMessage['action'], $aMessage);
+                self::init()->addRecord(Monolog\Logger::INFO, $aMessage['--action'], $aMessage);
             }
 
             return self::$sRequestHash;
@@ -376,6 +376,6 @@
 
             $aMessage['--i'] = self::getLogIndex();
 
-            self::init()->addRecord(Monolog\Logger::INFO, $aMessage['action'], $aMessage);
+            self::init()->addRecord(Monolog\Logger::INFO, $aMessage['--action'], $aMessage);
         }
     }
