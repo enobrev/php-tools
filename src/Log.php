@@ -58,6 +58,16 @@
             return self::$oLog;
         }
 
+        private static function assignArrayByPath(&$arr, $path, $value, $separator = '.') {
+            $keys = explode($separator, $path);
+
+            foreach ($keys as $key) {
+                $arr = &$arr[$key];
+            }
+
+            $arr = $value;
+        }
+
         /**
          * Adds a log record at the designated level
          *
@@ -67,23 +77,34 @@
          * @return Boolean Whether the record has been processed
          */
         private static function addRecord($iLevel, $sMessage, array $aContext = array()) {
-            $aContext        = array_merge(['action' => $sMessage], [$sMessage => $aContext]);
+            $aLog = ['action' => $sMessage];
+
+            if ($aContext && is_array($aContext) && count($aContext)) {
+                foreach ($aContext as $sKey => $mValue) {
+                    if (strncmp($sKey, "--", 2) === 0) {
+                        $aLog[$sKey] = $mValue;
+                        unset($aContext[$sKey]);
+                    }
+                }
+
+                self::assignArrayByPath($aLog, $sMessage, $aContext);
+            }
 
             if ($sRequestHash = self::getRequestHash()) {
-                $aContext['--r'] = $sRequestHash;
+                $aLog['--r'] = $sRequestHash;
             }
 
             if ($sThreadHash = self::getThreadHash()) {
-                $aContext['--t'] = $sThreadHash;
+                $aLog['--t'] = $sThreadHash;
             }
 
             if ($sParentHash = self::getParentHash()) {
-                $aContext['--p'] = $sParentHash;
+                $aLog['--p'] = $sParentHash;
             }
 
-            $aContext['--i'] = self::getLogIndex();
+            $aLog['--i'] = self::getLogIndex();
 
-            return self::init()->addRecord($iLevel, $sMessage, $aContext);
+            return self::init()->addRecord($iLevel, $sMessage, $aLog);
         }
 
         /**
