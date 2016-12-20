@@ -258,6 +258,13 @@
         /**
          * @return string
          */
+        public static function getRequestHashForOutput() {
+            return self::$sRequestHash;
+        }
+
+        /**
+         * @return string
+         */
         private static function getThreadHash() {
             if (self::$sThreadHash !== NULL) {
                 // Fall Through
