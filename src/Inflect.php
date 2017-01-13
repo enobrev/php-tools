@@ -131,6 +131,7 @@
           'species',
           'money',
           'rice',
+          'beta',
           'information',
           'equipment'
       ];
