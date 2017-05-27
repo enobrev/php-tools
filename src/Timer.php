@@ -122,9 +122,11 @@
          * @return int float
          */
         public function stop($sLabel) {
-            $iIndex = $this->aIndices[$sLabel];
-            $this->aTimers[$sLabel][$iIndex]['stop'] = $this->getTime();
-            return $this->aTimers[$sLabel][$iIndex]['stop'] - $this->aTimers[$sLabel][$iIndex]['start'];
+            if (isset($this->aIndices[$sLabel]) && isset($this->aTimers[$sLabel])) {
+                $iIndex = $this->aIndices[$sLabel];
+                $this->aTimers[$sLabel][$iIndex]['stop'] = $this->getTime();
+                return $this->aTimers[$sLabel][$iIndex]['stop'] - $this->aTimers[$sLabel][$iIndex]['start'];
+            }
         }
 
         /**
