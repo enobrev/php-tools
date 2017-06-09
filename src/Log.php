@@ -234,10 +234,18 @@
         }
 
         /**
+         * @param string     $sAction
+         * @param TimeKeeper $oTimer
+         */
+        public static function dt(TimeKeeper $oTimer) {
+            self::d($oTimer->label(), ['--ms' => $oTimer->stop()]);
+        }
+
+        /**
          * @param $sLabel
          * @return TimeKeeper
          */
-        public static function startTimer($sLabel) {
+        public static function startTimer(string $sLabel) {
             if (self::$oTimer instanceof Timer === false) {
                 self::$oTimer = new Timer();
             }
@@ -250,7 +258,7 @@
          *
          * @return TimeKeeper
          */
-        public static function stopTimer($sLabel) {
+        public static function stopTimer(string $sLabel) {
             if (self::$oTimer instanceof Timer) {
                 return self::$oTimer->stop($sLabel);
             }
@@ -370,6 +378,7 @@
                 'meta'     => self::$aRequests[$sRequestHash],
                 '--r'      => $sRequestHash,
                 '--ms'     => $aTimers['__total__']['range'],
+                '--timer'  => $aTimers['__total__'],
                 '--timers' => json_encode($aTimers)
             ]);
 

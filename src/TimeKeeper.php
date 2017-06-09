@@ -26,6 +26,13 @@
             $this->nStop = 0;
         }
 
+        /**
+         * @return string
+         */
+        public function label() {
+            return $this->sLabel;
+        }
+
         public function start() {
             $this->nStart = $this->getTime();
             $this->nStop = 0;
