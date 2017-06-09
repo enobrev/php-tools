@@ -235,19 +235,20 @@
 
         /**
          * @param $sLabel
+         * @return TimeKeeper
          */
         public static function startTimer($sLabel) {
             if (self::$oTimer instanceof Timer === false) {
                 self::$oTimer = new Timer();
             }
 
-            self::$oTimer->start($sLabel);
+            return self::$oTimer->start($sLabel);
         }
 
         /**
          * @param $sLabel
          *
-         * @return float
+         * @return TimeKeeper
          */
         public static function stopTimer($sLabel) {
             if (self::$oTimer instanceof Timer) {
@@ -363,13 +364,12 @@
             $sRequestHash = Log::getRequestHash();
 
             self::stopTimer($sRequestHash);
-            $aTimers = self::$oTimer->getAll();
+            $aTimers = self::$oTimer->stats();
 
             $aMessage = self::prepareContext('Log.End', [
                 'meta'     => self::$aRequests[$sRequestHash],
                 '--r'      => $sRequestHash,
                 '--ms'     => $aTimers['__total__']['range'],
-                '--timer'  => $aTimers['__total__'],
                 '--timers' => json_encode($aTimers)
             ]);
 

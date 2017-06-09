@@ -2,137 +2,101 @@
     namespace Enobrev;
 
     class Timer {
-        /** @var array  */
-        private $aTimers;
-
-        /** @var int[] */
-        private $aIndices;
-
-        /** @var bool  */
-        private $bReturnTimers = false;
-
         /**
-         * Timer constructor.
-         * @param bool $bReturnTimers
+         * @var TimeKeeper[][]
          */
-        public function __construct(bool $bReturnTimers = false) {
-            $this->aTimers          = [];
-            $this->aIndices         = [];
-            $this->bReturnTimers    = $bReturnTimers;
-        }
+        private static $aTimers = [];
 
         /**
          * @param bool $bReturnTimers
+         * @return array
          */
-        public function shouldReturnTimers(bool $bReturnTimers) {
-            $this->bReturnTimers = $bReturnTimers;
-        }
-
-        /**
-         * @param $sLabel
-         * @return int
-         */
-        private function init($sLabel) {
-            if (!isset($this->aTimers[$sLabel])) {
-                $this->aTimers[$sLabel] = [];
-            }
-
-            $this->aTimers[$sLabel][] = [
-                'start' => 0,
-                'stop'  => 0
+        public static function stats($bReturnTimers = false) {
+            $aReturn = [];
+            $aReturn['__total__'] = [
+                'count'         => 0,
+                'range'       => 0,
+                'average'     => 0
             ];
 
-            $this->aIndices[$sLabel] = count($this->aTimers[$sLabel]) - 1;
+            if (count(self::$aTimers)) {
+                foreach (self::$aTimers as $sLabel => $aTimers) {
+                    $iTotal = 0;
+                    $iCount = 0;
+                    $aStats = [];
 
-            return $this->aIndices[$sLabel];
-        }
+                    foreach ($aTimers as &$oTimer) {
+                        if ($oTimer->started()) {
+                            $oTimer->stop();
+                            $aTimerStats = $oTimer->stats();
 
-        /**
-         * @param string $sLabel
-         * @return array
-         */
-        public function get($sLabel) {
-            if (isset($this->aTimers[$sLabel])
-            &&  count($this->aTimers[$sLabel])) {
-                $aTimers = $this->aTimers[$sLabel];
-                $iTotal  = 0;
-                $iCount  = 0;
-                foreach($aTimers as &$aTimer) {
-                    if (isset($aTimer['start'])) {
-                        if (isset($aTimer['stop'])) {
-                            $aTimer['range'] = $aTimer['stop'] - $aTimer['start'];
-                        } else {
-                            $aTimer['range'] = $this->getTime() - $aTimer['start'];
+                            $iTotal += $aTimerStats['range'];
+                            $iCount++;
+
+                            $aStats[] = $aTimerStats;
                         }
-
-                        $iTotal += $aTimer['range'];
-                        $iCount++;
                     }
-                }
 
-                $aReturn = [
-                    'range'         => $iTotal,
-                    'count'         => $iCount,
-                    'average'       => $iTotal / $iCount
-                ];
+                    $aReturn[$sLabel] = [
+                        'range'   => $iTotal,
+                        'count'   => $iCount,
+                        'average' => $iTotal / $iCount
+                    ];
 
-                if ($this->bReturnTimers) {
-                    $aReturn['timers'] = $aTimers;
-                }
+                    if ($bReturnTimers) {
+                        $aReturn[$sLabel]['timers'] = $aStats;
+                    }
 
-                return $aReturn;
-            }
-        }
-
-        /**
-         * @return array
-         */
-        public function getAll() {
-            $aReturn = array();
-            $aReturn['__total__'] = array(
-                'count'         => 0,
-                'range'         => 0,
-                'average'       => 0
-            );
-
-            foreach (array_keys($this->aTimers) as $sLabel) {
-                $aReturn[$sLabel] = $this->get($sLabel);
-                if ($aReturn[$sLabel]) {
                     $aReturn['__total__']['range'] += $aReturn[$sLabel]['range'];
                     $aReturn['__total__']['count'] += $aReturn[$sLabel]['count'];
                 }
-            }
 
-            $aReturn['__total__']['average'] = $aReturn['__total__']['range'] / $aReturn['__total__']['count'];
+                $aReturn['__total__']['average'] = (float) sprintf("%01.2f", $aReturn['__total__']['range'] / count(self::$aTimers));
+            }
 
             return $aReturn;
         }
 
         /**
          * @param string $sLabel
+         * @return TimeKeeper
          */
-        public function start($sLabel) {
-            $iIndex = $this->init($sLabel);
-            $this->aTimers[$sLabel][$iIndex]['start'] = $this->getTime();
-            $this->aTimers[$sLabel][$iIndex]['stop']  = 0;
-        }
-
-        /**
-         * @param string $sLabel
-         * @return int float
-         */
-        public function stop($sLabel) {
-            if (isset($this->aIndices[$sLabel]) && isset($this->aTimers[$sLabel])) {
-                $iIndex = $this->aIndices[$sLabel];
-                $this->aTimers[$sLabel][$iIndex]['stop'] = $this->getTime();
-                return $this->aTimers[$sLabel][$iIndex]['stop'] - $this->aTimers[$sLabel][$iIndex]['start'];
+        public static function &get(string $sLabel) {
+            if (isset(self::$aTimers[$sLabel])) {
+                $iTimers = count(self::$aTimers[$sLabel]);
+                if ($iTimers > 0) {
+                    $oTimer = &self::$aTimers[$sLabel][$iTimers - 1];
+                    return $oTimer;
+                }
             }
         }
 
         /**
+         * @param string $sLabel
+         * @return TimeKeeper
+         */
+        public static function &start(string $sLabel) {
+            if (!isset(self::$aTimers[$sLabel])) {
+                self::$aTimers[$sLabel] = [];
+            }
+
+            $oTimer = new TimeKeeper($sLabel);
+            $oTimer->start();
+
+            self::$aTimers[$sLabel][] = &$oTimer;
+
+            return $oTimer;
+        }
+
+        /**
+         * @param string $sLabel
          * @return float
          */
-        private function getTime() {
-            return microtime(true) * 1000;
+        public static function stop(string $sLabel) {
+            $oTimer = &self::get($sLabel);
+            if ($oTimer) {
+                return $oTimer->stop();
+            }
         }
     }
+
