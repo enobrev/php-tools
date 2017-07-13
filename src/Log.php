@@ -279,6 +279,8 @@
                 // Fall Through
             } else if (isset($_REQUEST['--t'])) {
                 self::$sThreadHash = $_REQUEST['--t'];
+            } else if (isset($_SERVER['HTTP_X_REQUEST_ID'])) {
+                self::$sThreadHash = $_SERVER['HTTP_X_REQUEST_ID'];
             } else {
                 self::$sThreadHash = substr(hash('sha1', notNowByRightNow()->format('Y-m-d G:i:s.u')), 0, 6);
             }
