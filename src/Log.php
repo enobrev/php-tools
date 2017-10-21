@@ -1,6 +1,7 @@
 <?php
     namespace Enobrev;
 
+    use DateTime;
     use Monolog;
     use Monolog\Formatter\LineFormatter;
     use Monolog\Handler\SyslogHandler;
@@ -10,7 +11,10 @@
         private static $oLog  = null;
 
         /** @var string */
-        private static $sName = null;
+        private static $sService = null;
+
+        /** @var string */
+        private static $sPurpose = null;
 
         /** @var bool */
         private static $bJSONLogs = false;
@@ -33,16 +37,28 @@
         /** @var array[]  */
         private static $aRequests = [];
 
+        /** @var array */
+        private static $aGlobalContext = [];
+
+        /** @var DateTime */
+        private static $oStartTime = null;
+
+        /** @var bool */
+        private static $bIsError = false;
+
+        /** @var array  */
+        private static $aTags = [];
+
 
         private static function init() {
             if (self::$oLog === null) {
-                if (self::$sName === null) {
-                    throw new \Exception("Please set a Name for the Logger using Enobrev\\Log::setName()");
+                if (self::$sService === null) {
+                    throw new \Exception("Please set a Service Name for the Logger using Enobrev\\Log::setService()");
                 }
 
                 register_shutdown_function(array(self::class, 'shutdown'));
 
-                self::$oLog = new Monolog\Logger(self::$sName);
+                self::$oLog = new Monolog\Logger(self::$sService);
 
                 if (self::$bJSONLogs) {
                     $oFormatter = new LineFormatter("@cee: %context%");
@@ -110,6 +126,13 @@
                         $aLog[$sKey] = $mValue;
                         unset($aContext[$sKey]);
                     }
+
+                    if (strncmp($sKey, "#", 1) === 0) {
+                        $sStrippedKey = str_replace('#', '', $sKey);
+
+                        self::$aGlobalContext[$sStrippedKey] = $aLog[$sStrippedKey] = $mValue;
+                        unset($aContext[$sKey]);
+                    }
                 }
 
                 self::assignArrayByPath($aLog, $sMessage, $aContext);
@@ -119,11 +142,34 @@
         }
 
         /**
-         * @param string $sName
+         * @param string $sTag
+         * @param        $mValue
          */
-        public static function setName(string $sName) {
-            self::$sName = $sName;
+        public static function addTag(string $sTag, $mValue) {
+            self::$aTags[$sTag] = $mValue;
         }
+
+        /**
+         * @param bool $bIsError
+         */
+        public static function setProcessIsError(bool $bIsError) {
+            self::$bIsError = $bIsError;
+        }
+
+        /**
+         * @param string $sService
+         */
+        public static function setService(string $sService) {
+            self::$sService = $sService;
+        }
+
+        /**
+         * @param string $sPurpose
+         */
+        public static function setPurpose(string $sPurpose) {
+            self::$sPurpose = $sPurpose;
+        }
+
 
         public static function enableJSON() {
             self::$bJSONLogs = true;
@@ -234,7 +280,6 @@
         }
 
         /**
-         * @param string     $sAction
          * @param TimeKeeper $oTimer
          */
         public static function dt(TimeKeeper $oTimer) {
@@ -327,11 +372,13 @@
          */
         private static function getRequestHash() {
             if (self::$sRequestHash == NULL) {
+                self::$oStartTime = notNowByRightNow();
+
                 $sIP    = get_ip();
                 $sAgent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
 
                 $aRequest   = array(
-                    'date' => notNowByRightNow()->format('Y-m-d H:i:s.u')
+                    'date' => self::$oStartTime->format('Y-m-d H:i:s.u')
                 );
 
                 if (isset($_SERVER['HTTP_REFERER']))    { $aRequest['referrer']   = $_SERVER['HTTP_REFERER'];     }
@@ -342,7 +389,7 @@
 
                 self::$sRequestHash = self::getParentPath() . substr(hash('sha1', json_encode($aRequest)), 0, 6);
 
-                $aMessage = self::prepareContext('Log.Start', [
+                $aMessage = self::prepareContext(self::$sService . '.Init', [
                     'meta' => $aRequest,
                     '--r'  => self::$sRequestHash
                 ]);
@@ -376,12 +423,19 @@
             self::stopTimer($sRequestHash);
             $aTimers = self::$oTimer->stats();
 
-            $aMessage = self::prepareContext('Log.End', [
-                'meta'     => self::$aRequests[$sRequestHash],
-                '--r'      => $sRequestHash,
-                '--ms'     => $aTimers['__total__']['range'],
-                '--timer'  => $aTimers['__total__'],
-                '--timers' => json_encode($aTimers)
+            $aMessage = self::prepareContext(self::$sService . '.Summary', [
+                '--format'          => 'SSFSpan.DashedTrace',
+                'version'           => 1,
+                'start_timestamp'   => DateTime::ATOM,
+                'end_timestamp'     => notNowByRightNow()->format(DateTime::ATOM),
+                'error'             => self::$bIsError,
+                'service'           => self::$sService,
+                'metrics'           => json_encode($aTimers),
+                'tags'              => self::$aTags,
+                'indicator'         => false,
+                'name'              => self::$sPurpose,
+                'context'           => self::$aGlobalContext,
+                '--r'               => $sRequestHash
             ]);
 
             if ($sThreadHash  = Log::getThreadHash()) {
