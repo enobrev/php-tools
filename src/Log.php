@@ -397,6 +397,10 @@
 
                 $aMessage = self::prepareContext(self::$sService . '.Init', [
                     'meta' => $aRequest,
+                    '#user' => [
+                        'ip'    => $sIP,
+                        'agent' => $sAgent
+                    ],
                     '--r'  => self::$sRequestHash
                 ]);
 
