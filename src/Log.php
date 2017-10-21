@@ -130,7 +130,13 @@
                     if (strncmp($sKey, "#", 1) === 0) {
                         $sStrippedKey = str_replace('#', '', $sKey);
 
-                        self::$aGlobalContext[$sStrippedKey] = $aLog[$sStrippedKey] = $mValue;
+                        if (isset(self::$aGlobalContext[$sStrippedKey])) {
+                            self::$aGlobalContext[$sStrippedKey] = array_merge(self::$aGlobalContext[$sStrippedKey], $mValue);
+                        } else {
+                            self::$aGlobalContext[$sStrippedKey] = $mValue;
+                        }
+
+                        $aLog[$sStrippedKey] = $mValue;
                         unset($aContext[$sKey]);
                     }
                 }
