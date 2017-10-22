@@ -436,7 +436,7 @@
             $aMessage = self::prepareContext(self::$sService . '.Summary', [
                 '--format'          => 'SSFSpan.DashedTrace',
                 'version'           => 1,
-                'start_timestamp'   => DateTime::ATOM,
+                'start_timestamp'   => self::$oStartTime->format(DateTime::ATOM),
                 'end_timestamp'     => notNowByRightNow()->format(DateTime::ATOM),
                 'error'             => self::$bIsError,
                 'service'           => self::$sService,
