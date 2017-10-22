@@ -6,7 +6,7 @@
     use PHPUnit_Framework_TestCase as TestCase;
  
     class DepluralizeTest extends TestCase {
-        private $aWords;cd 
+        private $aWords;
         
         public function setUp() {
             $this->aWords = [
