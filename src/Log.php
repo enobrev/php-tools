@@ -13,41 +13,23 @@
         /** @var string */
         private static $sService = null;
 
-        /** @var string */
-        private static $sPurpose = null;
-
         /** @var bool */
         private static $bJSONLogs = false;
-
-        /** @var int */
-        private static $iLogIndex = null;
-
-        /** @var string */
-        private static $sRequestHash = null;
 
         /** @var string */
         private static $sThreadHash = null;
 
-        /** @var array  */
-        private static $aHashHistory = [];
-
         /** @var Timer */
         private static $oTimer = null;
 
-        /** @var array[]  */
-        private static $aRequests = [];
+        /** @var array  */
+        private static $aSpans = [];
+
+        /** @var array  */
+        private static $aSettings = [];
 
         /** @var array */
         private static $aGlobalContext = [];
-
-        /** @var DateTime */
-        private static $oStartTime = null;
-
-        /** @var bool */
-        private static $bIsError = false;
-
-        /** @var array  */
-        private static $aTags = [];
 
 
         private static function init() {
@@ -71,6 +53,8 @@
                 self::$oLog->pushHandler($oSyslog);
             }
 
+            self::initSpan();
+
             return self::$oLog;
         }
 
@@ -93,21 +77,12 @@
          * @return Boolean Whether the record has been processed
          */
         private static function addRecord($iLevel, $sMessage, array $aContext = array()) {
-            $aLog = self::prepareContext($sMessage, $aContext);
+            self::incrementCurrentIndex();
 
-            if ($sRequestHash = self::getRequestHash()) {
-                $aLog['--r'] = $sRequestHash;
-            }
-
-            if ($sThreadHash = self::getThreadHash()) {
-                $aLog['--t'] = $sThreadHash;
-            }
-
-            if ($sParentHash = self::getParentHash()) {
-                $aLog['--p'] = $sParentHash;
-            }
-
-            $aLog['--i'] = self::getLogIndex();
+            $aLog  = array_merge(
+                self::prepareContext($sMessage, $aContext),
+                self::getCurrentSpan()
+            );
 
             return self::init()->addRecord($iLevel, $sMessage, $aLog);
         }
@@ -148,21 +123,6 @@
         }
 
         /**
-         * @param string $sTag
-         * @param        $mValue
-         */
-        public static function addTag(string $sTag, $mValue) {
-            self::$aTags[$sTag] = $mValue;
-        }
-
-        /**
-         * @param bool $bIsError
-         */
-        public static function setProcessIsError(bool $bIsError) {
-            self::$bIsError = $bIsError;
-        }
-
-        /**
          * @param string $sService
          */
         public static function setService(string $sService) {
@@ -170,31 +130,45 @@
         }
 
         /**
+         * @param string $sTag
+         * @param        $mValue
+         */
+        public static function addTag(string $sTag, $mValue) {
+            self::$aSettings[self::getCurrentRequestHash()]['tags'][$sTag] = $mValue;
+        }
+
+        /**
+         * @param bool $bIsError
+         */
+        public static function setProcessIsError(bool $bIsError) {
+            self::$aSettings[self::getCurrentRequestHash()]['error'] = $bIsError;
+        }
+
+        /**
          * @param string $sPurpose
          */
         public static function setPurpose(string $sPurpose) {
-            self::$sPurpose = $sPurpose;
+            self::$aSettings[self::getCurrentRequestHash()]['name'] = $sPurpose;
         }
 
+        private static function incrementCurrentIndex() {
+            self::$aSpans[count(self::$aSpans) - 1]['--i']++;
+        }
+
+        private static function getCurrentRequestHash() {
+            return self::$aSpans[count(self::$aSpans) - 1]['--r'];
+        }
+
+        private static function getCurrentSpan() {
+            return self::$aSpans[count(self::$aSpans) - 1];
+        }
+
+        private static function getCurrentSettings() {
+            return self::$aSettings[self::getCurrentRequestHash()];
+        }
 
         public static function enableJSON() {
             self::$bJSONLogs = true;
-        }
-
-        /**
-         * Sets the Parent Hash to the current Hash, and then resets the Request Hash
-         */
-        public static function startChildRequest() {
-            self::$aHashHistory[] = self::getRequestHash();
-            self::$sRequestHash = null;
-        }
-
-        /**
-         * Retrieves the previous request hash
-         */
-        public static function endChildRequest() {
-            self::stopTimer(self::$sRequestHash);
-            self::$sRequestHash = array_pop(self::$aHashHistory);
         }
 
         /**
@@ -307,7 +281,7 @@
         /**
          * @param $sLabel
          *
-         * @return TimeKeeper
+         * @return float
          */
         public static function stopTimer(string $sLabel) {
             if (self::$oTimer instanceof Timer) {
@@ -319,7 +293,22 @@
          * @return string
          */
         public static function getRequestHashForOutput() {
-            return self::$sRequestHash;
+            return self::getCurrentRequestHash();
+        }
+
+        /**
+         * Sets the Parent Hash to the current Hash, and then resets the Request Hash
+         */
+        public static function startChildRequest() {
+            self::initSpan();
+        }
+
+        /**
+         * Retrieves the previous request hash
+         */
+        public static function endChildRequest() {
+            self::stopTimer(self::getCurrentRequestHash());
+            array_pop(self::$aSpans);;
         }
 
         /**
@@ -339,124 +328,92 @@
             return self::$sThreadHash;
         }
 
-        /**
-         * @return string
-         */
-        private static function getParentHash() {
-            $iHashHistory = count(self::$aHashHistory);
-            if ($iHashHistory > 0) {
-                return self::$aHashHistory[$iHashHistory - 1];
-            }
-        }
+        private static function initSpan() {
+            $oStartTime      = notNowByRightNow();
+            $sIP             = get_ip();
+            $aRequestDetails = [
+                'date' => $oStartTime->format('Y-m-d H:i:s.u')
+            ];
 
-        /**
-         * @return string
-         */
-        private static function getLogIndex() {
-            if (self::$iLogIndex === null) {
-                self::$iLogIndex = 0;
-            }
+            if (isset($_SERVER['HTTP_REFERER']))    { $aRequestDetails['referrer']   = $_SERVER['HTTP_REFERER'];     }
+            if (isset($_SERVER['REQUEST_URI']))     { $aRequestDetails['uri']        = $_SERVER['REQUEST_URI'];      }
+            if (isset($_SERVER['HTTP_HOST']))       { $aRequestDetails['host']       = $_SERVER['HTTP_HOST'];        }
+            if (isset($_SERVER['HTTP_USER_AGENT'])) { $aRequestDetails['agent']      = $_SERVER['HTTP_USER_AGENT'];  }
+            if ($sIP != 'unknown')                  { $aRequestDetails['ip']         = $sIP;                         }
 
-            self::$iLogIndex++;
-            return self::$iLogIndex;
-        }
+            $aPath        = array_column(self::$aSpans, '--r');
+            $sPath        = count($aPath) > 0 ? implode('.', $aPath) . '.' : '';
+            $sRequestHash = $sPath . substr(hash('sha1', json_encode($aRequestDetails)), 0, 6);
 
-        /**
-         * @return string
-         */
-        private static function getParentPath() {
-            if (count(self::$aHashHistory)) {
-                return implode('.', self::$aHashHistory) . '.';
-            }
+            $aSpan = [
+                '--i'      => 1,
+                '--r'      => $sRequestHash
+            ];
 
-            return '';
-        }
+            self::$aSettings[$sRequestHash] = [
+                'name'            => '',
+                'start_timestamp' => $oStartTime->format(DateTime::ATOM),
+                'error'           => false,
+                'tags'            => []
+            ];
 
-        /**
-         * @internal param bool $bForceReset
-         * @return string
-         */
-        private static function getRequestHash() {
-            if (self::$sRequestHash == NULL) {
-                self::$oStartTime = notNowByRightNow();
-
-                $sIP    = get_ip();
-                $sAgent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
-
-                $aRequest   = array(
-                    'date' => self::$oStartTime->format('Y-m-d H:i:s.u')
-                );
-
-                if (isset($_SERVER['HTTP_REFERER']))    { $aRequest['referrer']   = $_SERVER['HTTP_REFERER'];     }
-                if (isset($_SERVER['REQUEST_URI']))     { $aRequest['uri']        = $_SERVER['REQUEST_URI'];      }
-                if (isset($_SERVER['HTTP_HOST']))       { $aRequest['host']       = $_SERVER['HTTP_HOST'];        }
-                if (strlen($sAgent))                    { $aRequest['agent']      = $sAgent;                      }
-                if ($sIP != 'unknown')                  { $aRequest['ip']         = $sIP;                         }
-
-                self::$sRequestHash = self::getParentPath() . substr(hash('sha1', json_encode($aRequest)), 0, 6);
-
-                $aMessage = self::prepareContext(self::$sService . '.Init', [
-                    'meta' => $aRequest,
-                    '#user' => [
-                        'ip'    => $sIP,
-                        'agent' => $sAgent
-                    ],
-                    '--r'  => self::$sRequestHash
-                ]);
-
-                self::$aRequests[self::$sRequestHash] = $aRequest;
-
-                if ($sThreadHash = Log::getThreadHash()) {
-                    $aMessage['--t'] = $sThreadHash;
-                }
-
-                if ($sParentHash = Log::getParentHash()) {
-                    $aMessage['--p'] = $sParentHash;
-                }
-
-                if (!self::$iLogIndex) {
-                    self::$iLogIndex = 1;
-                }
-
-                $aMessage['--i'] = self::getLogIndex();
-
-                self::startTimer(self::$sRequestHash);
-                self::init()->addRecord(Monolog\Logger::INFO, $aMessage['--action'], $aMessage);
+            if ($sThreadHash = Log::getThreadHash()) {
+                $aSpan['--t'] = $sThreadHash;
             }
 
-            return self::$sRequestHash;
+            if (count(self::$aSpans) > 0) {
+                $aSpan['--p'] = self::$aSpans[count(self::$aSpans) - 1]['--r'];
+            } else if (isset($_REQUEST['--p'])) {
+                $aSpan['--p'] = $_REQUEST['--p'];
+            }
+
+            $aInit = [
+                'meta' => $aRequestDetails
+            ];
+
+            $aUser = [];
+
+            if ($sIP) {
+                $aUser['ip']    = $sIP;
+            }
+
+            if (isset($aRequestDetails['agent'])) {
+                $aUser['agent'] = $aRequestDetails['agent'];
+            }
+
+            if (count($aUser)) {
+                $aInit['#user'] = $aUser;
+            }
+
+            $aMessage = array_merge(
+                self::prepareContext(self::$sService . '.Init', $aInit),
+                $aSpan
+            );
+
+            self::startTimer($sRequestHash);
+            self::init()->addRecord(Monolog\Logger::INFO, $aMessage['--action'], $aMessage);
+
+            self::$aSpans[] = $aSpan;
         }
 
         public static function shutdown() {
-            $sRequestHash = Log::getRequestHash();
+            self::incrementCurrentIndex();
+            self::stopTimer(self::getCurrentRequestHash());
 
-            self::stopTimer($sRequestHash);
-            $aTimers = self::$oTimer->stats();
-
-            $aMessage = self::prepareContext(self::$sService . '.Summary', [
-                '--format'          => 'SSFSpan.DashedTrace',
-                'version'           => 1,
-                'start_timestamp'   => self::$oStartTime->format(DateTime::ATOM),
-                'end_timestamp'     => notNowByRightNow()->format(DateTime::ATOM),
-                'error'             => self::$bIsError,
-                'service'           => self::$sService,
-                'metrics'           => json_encode($aTimers),
-                'tags'              => self::$aTags,
-                'indicator'         => false,
-                'name'              => self::$sPurpose,
-                'context'           => self::$aGlobalContext,
-                '--r'               => $sRequestHash
-            ]);
-
-            if ($sThreadHash  = Log::getThreadHash()) {
-                $aMessage['--t'] = $sThreadHash;
-            }
-
-            if ($sParentHash  = Log::getParentHash()) {
-                $aMessage['--p'] = $sParentHash;
-            }
-
-            $aMessage['--i'] = self::getLogIndex();
+            $aTimers  = self::$oTimer->stats();
+            $aMessage = array_merge(
+                self::prepareContext(self::$sService . '.Summary', [
+                    '--format'        => 'SSFSpan.DashedTrace',
+                    'version'         => 1,
+                    'end_timestamp'   => notNowByRightNow()->format(DateTime::ATOM),
+                    'service'         => self::$sService,
+                    'metrics'         => json_encode($aTimers),
+                    'indicator'       => false,
+                    'context'         => self::$aGlobalContext
+                ]),
+                self::getCurrentSettings(),
+                self::getCurrentSpan()
+            );
 
             self::init()->addRecord(Monolog\Logger::INFO, $aMessage['--action'], $aMessage);
         }

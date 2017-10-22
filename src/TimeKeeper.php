@@ -38,6 +38,9 @@
             $this->nStop = 0;
         }
 
+        /**
+         * @return float
+         */
         public function stop() {
             if (!$this->stopped()) {
                 $this->nStop = $this->getTime();
