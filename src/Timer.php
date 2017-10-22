@@ -5,13 +5,13 @@
         /**
          * @var TimeKeeper[][]
          */
-        private static $aTimers = [];
+        private $aTimers = [];
 
         /**
          * @param bool $bReturnTimers
          * @return array
          */
-        public static function stats($bReturnTimers = false) {
+        public function stats($bReturnTimers = false) {
             $aReturn = [];
             $aReturn['__total__'] = [
                 'count'         => 0,
@@ -19,8 +19,8 @@
                 'average'     => 0
             ];
 
-            if (count(self::$aTimers)) {
-                foreach (self::$aTimers as $sLabel => $aTimers) {
+            if (count($this->aTimers)) {
+                foreach ($this->aTimers as $sLabel => $aTimers) {
                     $iTotal = 0;
                     $iCount = 0;
                     $aStats = [];
@@ -51,7 +51,7 @@
                     $aReturn['__total__']['count'] += $aReturn[$sLabel]['count'];
                 }
 
-                $aReturn['__total__']['average'] = (float) sprintf("%01.2f", $aReturn['__total__']['range'] / count(self::$aTimers));
+                $aReturn['__total__']['average'] = (float) sprintf("%01.2f", $aReturn['__total__']['range'] / count($this->aTimers));
             }
 
             return $aReturn;
@@ -61,11 +61,11 @@
          * @param string $sLabel
          * @return TimeKeeper
          */
-        public static function &get(string $sLabel) {
-            if (isset(self::$aTimers[$sLabel])) {
-                $iTimers = count(self::$aTimers[$sLabel]);
+        public function &get(string $sLabel) {
+            if (isset($this->aTimers[$sLabel])) {
+                $iTimers = count($this->aTimers[$sLabel]);
                 if ($iTimers > 0) {
-                    $oTimer = &self::$aTimers[$sLabel][$iTimers - 1];
+                    $oTimer = &$this->aTimers[$sLabel][$iTimers - 1];
                     return $oTimer;
                 }
             }
@@ -75,15 +75,15 @@
          * @param string $sLabel
          * @return TimeKeeper
          */
-        public static function &start(string $sLabel) {
-            if (!isset(self::$aTimers[$sLabel])) {
-                self::$aTimers[$sLabel] = [];
+        public function &start(string $sLabel) {
+            if (!isset($this->aTimers[$sLabel])) {
+                $this->aTimers[$sLabel] = [];
             }
 
             $oTimer = new TimeKeeper($sLabel);
             $oTimer->start();
 
-            self::$aTimers[$sLabel][] = &$oTimer;
+            $this->aTimers[$sLabel][] = &$oTimer;
 
             return $oTimer;
         }
@@ -92,11 +92,10 @@
          * @param string $sLabel
          * @return float
          */
-        public static function stop(string $sLabel) {
-            $oTimer = &self::get($sLabel);
-            if ($oTimer) {
-                return $oTimer->stop();
+        public function stop(string $sLabel) {
+            $oTimeKeeperr = &$this->get($sLabel);
+            if ($oTimeKeeperr) {
+                return $oTimeKeeperr->stop();
             }
         }
     }
-

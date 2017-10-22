@@ -19,9 +19,6 @@
         /** @var string */
         private static $sThreadHash = null;
 
-        /** @var Timer */
-        private static $oTimer = null;
-
         /** @var array  */
         private static $aSpans = [];
 
@@ -31,14 +28,22 @@
         /** @var array */
         private static $aGlobalContext = [];
 
+        /** @var  int */
+        private static $iGlobalIndex = 0;
 
-        private static function init() {
+        const TIMESTAMP_FORMAT = 'Y-m-d H:i:s.u';
+
+        /**
+         * @return Monolog\Logger
+         * @throws \Exception
+         */
+        private static function initLogger() {
             if (self::$oLog === null) {
                 if (self::$sService === null) {
                     throw new \Exception("Please set a Service Name for the Logger using Enobrev\\Log::setService()");
                 }
 
-                register_shutdown_function(array(self::class, 'shutdown'));
+                register_shutdown_function([self::class, 'shutdown']);
 
                 self::$oLog = new Monolog\Logger(self::$sService);
 
@@ -48,24 +53,12 @@
                     $oFormatter = new LineFormatter("%context%");
                 }
 
-                $oSyslog    = new SyslogHandler('API');
+                $oSyslog = new SyslogHandler('API');
                 $oSyslog->setFormatter($oFormatter);
                 self::$oLog->pushHandler($oSyslog);
             }
 
-            self::initSpan();
-
             return self::$oLog;
-        }
-
-        private static function assignArrayByPath(&$arr, $path, $value, $separator = '.') {
-            $keys = explode($separator, $path);
-
-            foreach ($keys as $key) {
-                $arr = &$arr[$key];
-            }
-
-            $arr = $value;
         }
 
         /**
@@ -79,12 +72,28 @@
         private static function addRecord($iLevel, $sMessage, array $aContext = array()) {
             self::incrementCurrentIndex();
 
-            $aLog  = array_merge(
+            $aLog    = array_merge(
                 self::prepareContext($sMessage, $aContext),
                 self::getCurrentSpan()
             );
 
-            return self::init()->addRecord($iLevel, $sMessage, $aLog);
+            return self::initLogger()->addRecord($iLevel, $sMessage, $aLog);
+        }
+
+        /**
+         * @param        $arr
+         * @param        $path
+         * @param        $value
+         * @param string $separator
+         */
+        private static function assignArrayByPath(&$arr, $path, $value, $separator = '.') {
+            $keys = explode($separator, $path);
+
+            foreach ($keys as $key) {
+                $arr = &$arr[$key];
+            }
+
+            $arr = $value;
         }
 
         /**
@@ -93,7 +102,15 @@
          * @return array
          */
         private static function prepareContext($sMessage, array $aContext = []) {
-            $aLog = ['--action' => $sMessage];
+            self::$iGlobalIndex++;
+
+            $aLog = [
+                '--action' => $sMessage,
+                '--i'      => self::$iGlobalIndex
+            ];
+
+            $sRequestHash = self::getCurrentRequestHash();
+            $aSettingsContext =& self::$aSettings[$sRequestHash]['context'];
 
             if ($aContext && is_array($aContext) && count($aContext)) {
                 foreach ($aContext as $sKey => $mValue) {
@@ -104,15 +121,16 @@
 
                     if (strncmp($sKey, "#", 1) === 0) {
                         $sStrippedKey = str_replace('#', '', $sKey);
-
-                        if (is_array($mValue) && isset(self::$aGlobalContext[$sStrippedKey]) && is_array(self::$aGlobalContext[$sStrippedKey])) {
-                            self::$aGlobalContext[$sStrippedKey] = array_merge(self::$aGlobalContext[$sStrippedKey], $mValue);
-                        } else {
-                            self::$aGlobalContext[$sStrippedKey] = $mValue;
-                        }
-
-                        $aLog[$sStrippedKey] = $mValue;
+                        $aContext[$sStrippedKey] = $mValue;
                         unset($aContext[$sKey]);
+
+                        if (is_array($mValue)
+                        &&  isset($aSettingsContext[$sStrippedKey])
+                        &&  is_array($aSettingsContext[$sStrippedKey])) {
+                            $aSettingsContext[$sStrippedKey] = array_merge($aSettingsContext[$sStrippedKey], $mValue);
+                        } else {
+                            $aSettingsContext[$sStrippedKey] = $mValue;
+                        }
                     }
                 }
 
@@ -152,7 +170,12 @@
         }
 
         private static function incrementCurrentIndex() {
-            self::$aSpans[count(self::$aSpans) - 1]['--i']++;
+            $iSpans = count(self::$aSpans);
+            if ($iSpans <= 0) {
+                return;
+            }
+
+            self::$aSpans[$iSpans - 1]['--ri']++;
         }
 
         private static function getCurrentRequestHash() {
@@ -271,11 +294,7 @@
          * @return TimeKeeper
          */
         public static function startTimer(string $sLabel) {
-            if (self::$oTimer instanceof Timer === false) {
-                self::$oTimer = new Timer();
-            }
-
-            return self::$oTimer->start($sLabel);
+            return self::$aSettings[self::getCurrentRequestHash()]['metrics']->start($sLabel);
         }
 
         /**
@@ -284,9 +303,7 @@
          * @return float
          */
         public static function stopTimer(string $sLabel) {
-            if (self::$oTimer instanceof Timer) {
-                return self::$oTimer->stop($sLabel);
-            }
+            return self::$aSettings[self::getCurrentRequestHash()]['metrics']->stop($sLabel);
         }
 
         /**
@@ -300,7 +317,13 @@
          * Sets the Parent Hash to the current Hash, and then resets the Request Hash
          */
         public static function startChildRequest() {
-            self::initSpan();
+            $aContext  = [];
+            $aSettings = self::getCurrentSettings();
+            if (isset($aSettings['context']['user'])) {
+                $aContext['user'] = $aSettings['context']['user'];
+            }
+
+            self::initSpan($aContext);
         }
 
         /**
@@ -308,7 +331,8 @@
          */
         public static function endChildRequest() {
             self::stopTimer(self::getCurrentRequestHash());
-            array_pop(self::$aSpans);;
+            self::shutdown();
+            array_pop(self::$aSpans);
         }
 
         /**
@@ -328,7 +352,10 @@
             return self::$sThreadHash;
         }
 
-        private static function initSpan() {
+        /**
+         * @param array $aContext
+         */
+        public static function initSpan(array $aContext = []) {
             $oStartTime      = notNowByRightNow();
             $sIP             = get_ip();
             $aRequestDetails = [
@@ -341,20 +368,25 @@
             if (isset($_SERVER['HTTP_USER_AGENT'])) { $aRequestDetails['agent']      = $_SERVER['HTTP_USER_AGENT'];  }
             if ($sIP != 'unknown')                  { $aRequestDetails['ip']         = $sIP;                         }
 
-            $aPath        = array_column(self::$aSpans, '--r');
-            $sPath        = count($aPath) > 0 ? implode('.', $aPath) . '.' : '';
-            $sRequestHash = $sPath . substr(hash('sha1', json_encode($aRequestDetails)), 0, 6);
+            /*
+                $aPath        = array_column(self::$aSpans, '--r');
+                $sPath        = count($aPath) > 0 ? implode('.', $aPath) . '.' : '';
+                $sRequestHash = $sPath . substr(hash('sha1', json_encode($aRequestDetails)), 0, 6);
+            */
+            $sRequestHash = substr(hash('sha1', json_encode($aRequestDetails)), 0, 8);
 
             $aSpan = [
-                '--i'      => 1,
+                '--ri'     => 0,
                 '--r'      => $sRequestHash
             ];
 
             self::$aSettings[$sRequestHash] = [
                 'name'            => '',
-                'start_timestamp' => $oStartTime->format(DateTime::ATOM),
+                'start_timestamp' => $oStartTime->format(self::TIMESTAMP_FORMAT),
                 'error'           => false,
-                'tags'            => []
+                'tags'            => [],
+                'context'         => $aContext,
+                'metrics'         => new Timer()
             ];
 
             if ($sThreadHash = Log::getThreadHash()) {
@@ -367,14 +399,10 @@
                 $aSpan['--p'] = $_REQUEST['--p'];
             }
 
-            $aInit = [
-                'meta' => $aRequestDetails
-            ];
-
             $aUser = [];
 
             if ($sIP) {
-                $aUser['ip']    = $sIP;
+                $aUser['ip'] = $sIP;
             }
 
             if (isset($aRequestDetails['agent'])) {
@@ -382,39 +410,40 @@
             }
 
             if (count($aUser)) {
-                $aInit['#user'] = $aUser;
+                self::$aSettings[$sRequestHash]['context']['user'] = isset(self::$aSettings[$sRequestHash]['context']['user']) ? array_merge(self::$aSettings[$sRequestHash]['context']['user'], $aUser) : $aUser;
             }
 
-            $aMessage = array_merge(
-                self::prepareContext(self::$sService . '.Init', $aInit),
-                $aSpan
-            );
-
-            self::startTimer($sRequestHash);
-            self::init()->addRecord(Monolog\Logger::INFO, $aMessage['--action'], $aMessage);
-
             self::$aSpans[] = $aSpan;
+
+            self::startTimer(self::getCurrentRequestHash());
         }
 
         public static function shutdown() {
             self::incrementCurrentIndex();
-            self::stopTimer(self::getCurrentRequestHash());
+            $iTimer    = self::stopTimer(self::getCurrentRequestHash());
+            $aSettings = self::getCurrentSettings();
+            $aSettings['metrics'] = json_encode($aSettings['metrics']->stats());
 
-            $aTimers  = self::$oTimer->stats();
             $aMessage = array_merge(
-                self::prepareContext(self::$sService . '.Summary', [
-                    '--format'        => 'SSFSpan.DashedTrace',
-                    'version'         => 1,
-                    'end_timestamp'   => notNowByRightNow()->format(DateTime::ATOM),
-                    'service'         => self::$sService,
-                    'metrics'         => json_encode($aTimers),
-                    'indicator'       => false,
-                    'context'         => self::$aGlobalContext
-                ]),
-                self::getCurrentSettings(),
+                self::prepareContext(
+                    self::$sService . '.Summary',
+                    array_merge(
+                        [
+                            '--ms'            => $iTimer,
+                            '_format'         => 'SSFSpan.DashedTrace',
+                            'version'         => 1,
+                            'end_timestamp'   => notNowByRightNow()->format(self::TIMESTAMP_FORMAT),
+                            'service'         => self::$sService,
+                            'indicator'       => false
+                        ],
+                        $aSettings
+                    )
+                ),
                 self::getCurrentSpan()
             );
 
-            self::init()->addRecord(Monolog\Logger::INFO, $aMessage['--action'], $aMessage);
+            self::initLogger()->addRecord(Monolog\Logger::INFO, $aMessage['--action'], $aMessage);
         }
     }
+
+    Log::initSpan();
