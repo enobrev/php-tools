@@ -1,5 +1,5 @@
 {
-    "name": "enobrev/tools",
+    "name": "enobrev/php-tools",
     "description": "General Tools",
     "type": "library",
     "license": "MIT",
@@ -12,7 +12,7 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/enobrev/tools"
+            "url": "https://github.com/enobrev/php-tools"
         }
     ],
     "require": {
