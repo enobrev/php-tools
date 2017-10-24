@@ -327,7 +327,7 @@
          * Retrieves the previous request hash
          */
         public static function endChildRequest() {
-            self::stopTimer(self::getCurrentRequestHash());
+            self::stopTimer('_REQUEST');
             self::shutdown();
             array_pop(self::$aSpans);
         }
