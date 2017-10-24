@@ -83,9 +83,9 @@
          * @return float
          */
         public function stop(string $sLabel) {
-            $oTimeKeeperr = &$this->get($sLabel);
-            if ($oTimeKeeperr) {
-                return $oTimeKeeperr->stop();
+            $oTimeKeeper = &$this->get($sLabel);
+            if ($oTimeKeeper) {
+                return $oTimeKeeper->stop();
             }
         }
     }
