@@ -430,6 +430,7 @@
                     array_merge(
                         [
                             '--ms'            => $iTimer,
+                            '--summary'       => true,
                             '_format'         => 'SSFSpan.DashedTrace',
                             'version'         => 1,
                             'end_timestamp'   => notNowByRightNow()->format(self::TIMESTAMP_FORMAT),
