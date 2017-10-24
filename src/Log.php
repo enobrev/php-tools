@@ -412,12 +412,12 @@
 
             self::$aSpans[] = $aSpan;
 
-            self::startTimer(self::getCurrentRequestHash());
+            self::startTimer('_REQUEST');
         }
 
         public static function shutdown() {
             self::incrementCurrentIndex();
-            $iTimer    = self::stopTimer(self::getCurrentRequestHash());
+            $iTimer    = self::stopTimer('_REQUEST');
             $aSettings = self::getCurrentSettings();
             $aSettings['metrics'] = json_encode($aSettings['metrics']->stats());
 
