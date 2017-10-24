@@ -40,7 +40,7 @@
                     throw new \Exception("Please set a Service Name for the Logger using Enobrev\\Log::setService()");
                 }
 
-                register_shutdown_function([self::class, 'shutdown']);
+                register_shutdown_function([self::class, 'summary']);
 
                 self::$oLog = new Monolog\Logger(self::$sService);
 
@@ -328,7 +328,7 @@
          */
         public static function endChildRequest() {
             self::stopTimer('_REQUEST');
-            self::shutdown();
+            self::summary();
             array_pop(self::$aSpans);
         }
 
@@ -415,7 +415,7 @@
             self::startTimer('_REQUEST');
         }
 
-        public static function shutdown() {
+        public static function summary($sOverrideName = 'Summary') {
             self::incrementCurrentIndex();
             $iTimer    = self::stopTimer('_REQUEST');
             $aSettings = self::getCurrentSettings();
@@ -423,7 +423,7 @@
 
             $aMessage = array_merge(
                 self::prepareContext(
-                    self::$sService . '.Summary',
+                    self::$sService . '.' . $sOverrideName,
                     array_merge(
                         [
                             '--ms'            => $iTimer,
