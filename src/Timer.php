@@ -13,11 +13,6 @@
          */
         public function stats($bReturnTimers = false) {
             $aReturn = [];
-            $aReturn['__total__'] = [
-                'count'         => 0,
-                'range'       => 0,
-                'average'     => 0
-            ];
 
             if (count($this->aTimers)) {
                 foreach ($this->aTimers as $sLabel => $aTimers) {
@@ -46,12 +41,7 @@
                     if ($bReturnTimers) {
                         $aReturn[$sLabel]['timers'] = $aStats;
                     }
-
-                    $aReturn['__total__']['range'] += $aReturn[$sLabel]['range'];
-                    $aReturn['__total__']['count'] += $aReturn[$sLabel]['count'];
                 }
-
-                $aReturn['__total__']['average'] = (float) sprintf("%01.2f", $aReturn['__total__']['range'] / count($this->aTimers));
             }
 
             return $aReturn;

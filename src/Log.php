@@ -25,9 +25,6 @@
         /** @var array  */
         private static $aSettings = [];
 
-        /** @var array */
-        private static $aGlobalContext = [];
-
         /** @var  int */
         private static $iGlobalIndex = 0;
 
@@ -268,7 +265,7 @@
          * @return Boolean Whether the record has been processed
          */
         public static function a($sMessage, array $aContext = array()) {
-            return self::addRecord(Monolog\Logger::CRITICAL, $sMessage, $aContext);
+            return self::addRecord(Monolog\Logger::ALERT, $sMessage, $aContext);
         }
 
         /**
