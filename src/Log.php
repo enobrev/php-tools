@@ -131,7 +131,9 @@
                     }
                 }
 
-                self::assignArrayByPath($aLog, $sMessage, $aContext);
+                if (count($aContext)) {
+                    self::assignArrayByPath($aLog, $sMessage, $aContext);
+                }
             }
 
             return $aLog;
