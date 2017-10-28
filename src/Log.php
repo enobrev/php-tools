@@ -431,18 +431,20 @@
             $aMessage = array_merge(
                 self::prepareContext(
                     self::$sService . '.' . $sOverrideName,
-                    array_merge(
-                        [
-                            '--ms'            => $iTimer,
-                            '--summary'       => true,
-                            '_format'         => 'SSFSpan.DashedTrace',
-                            'version'         => 1,
-                            'end_timestamp'   => notNowByRightNow()->format(self::TIMESTAMP_FORMAT),
-                            'service'         => self::$sService,
-                            'indicator'       => false
-                        ],
-                        $aSettings
-                    )
+                    [
+                        '--ms'            => $iTimer,
+                        '--summary'       => true,
+                        '--span' => array_merge(
+                            [
+                                '_format'         => 'SSFSpan.DashedTrace',
+                                'version'         => 1,
+                                'end_timestamp'   => notNowByRightNow()->format(self::TIMESTAMP_FORMAT),
+                                'service'         => self::$sService,
+                                'indicator'       => false
+                            ],
+                            $aSettings
+                        )
+                    ]
                 ),
                 self::getCurrentSpan()
             );
