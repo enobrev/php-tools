@@ -145,6 +145,13 @@
         }
 
         /**
+         * @param array $aContext
+         */
+        public static function justAddContext(array $aContext) {
+            self::prepareContext('', $aContext);
+        }
+
+        /**
          * @param string $sTag
          * @param        $mValue
          */
