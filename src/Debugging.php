@@ -2,9 +2,9 @@
     namespace Enobrev;
 
     /**
-     * @param $sMessage
+     * @param string $sMessage
      */
-    function _output($sMessage): void {
+    function _output(string $sMessage): void {
         if (isCli() || contentTypeIsNotHtml()) {
             $sMessage = str_replace('<br />', "\n", $sMessage);
             $sMessage = str_replace('<pre>',  '', $sMessage);

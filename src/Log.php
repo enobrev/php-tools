@@ -83,7 +83,7 @@
          * @param mixed  $value
          * @param string $separator
          */
-        private static function assignArrayByPath(array &$arr, string $path, mixed $value, string $separator = '.'): void {
+        private static function assignArrayByPath(array &$arr, string $path, $value, string $separator = '.'): void {
             $keys = explode($separator, $path);
 
             foreach ($keys as $key) {
@@ -155,9 +155,9 @@
 
         /**
          * @param string $sTag
-         * @param        $mValue
+         * @param mixed  $mValue
          */
-        public static function addTag(string $sTag, mixed $mValue): void {
+        public static function addTag(string $sTag, $mValue): void {
             self::$aSettings[self::getCurrentRequestHash()]['tags'][$sTag] = $mValue;
         }
 
@@ -296,7 +296,7 @@
         }
 
         /**
-         * @param $sLabel
+         * @param string $sLabel
          * @return TimeKeeper
          */
         public static function startTimer(string $sLabel): TimeKeeper {
@@ -304,7 +304,7 @@
         }
 
         /**
-         * @param $sLabel
+         * @param string $sLabel
          *
          * @return float
          */
