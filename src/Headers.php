@@ -24,6 +24,7 @@
 
     /**
      * @return string
+     * @psalm-suppress PossiblyFalseArgument
      */
     function get_ip() {
         $bIsCLI = isCli();

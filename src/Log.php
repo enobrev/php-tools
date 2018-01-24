@@ -61,12 +61,15 @@
         /**
          * Adds a log record at the designated level
          *
+         * @psalm-suppress InvalidReturnType
+         * @psalm-suppress InvalidReturnStatement
+         * @psalm-suppress UndefinedClass
          * @param  int     $iLevel   The logging level
          * @param  string  $sMessage The log message
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        private static function addRecord($iLevel, $sMessage, array $aContext = array()) {
+        private static function addRecord(int $iLevel, string $sMessage, array $aContext = array()): bool {
             self::incrementCurrentIndex();
 
             $aLog    = array_merge(
@@ -427,6 +430,7 @@
         /**
          * @param string $sOverrideName
          * @throws \Exception
+         * @psalm-suppress UndefinedClass
          */
         public static function summary(string $sOverrideName = 'Summary'): void {
             self::incrementCurrentIndex();
