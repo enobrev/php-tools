@@ -49,15 +49,18 @@
 
         /**
          * @param string $sLabel
-         * @return TimeKeeper|null
+         * @return TimeKeeper
          */
         public function &get(string $sLabel) {
-            if (isset($this->aTimers[$sLabel])) {
-                $iTimers = count($this->aTimers[$sLabel]);
-                if ($iTimers > 0) {
-                    $oTimer = &$this->aTimers[$sLabel][$iTimers - 1];
-                    return $oTimer;
-                }
+            if (!isset($this->aTimers[$sLabel])) {
+                return $this->start($sLabel);
+            }
+
+            $iTimers = count($this->aTimers[$sLabel]);
+            if ($iTimers > 0) {
+                $oTimer = &$this->aTimers[$sLabel][$iTimers - 1];
+
+                return $oTimer;
             }
         }
 
