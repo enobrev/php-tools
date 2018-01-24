@@ -58,6 +58,7 @@
   //   Added rule for *us -> *uses
 
   class Inflect {
+      /** @var array  */
       static $plural = [
           '/(quiz)$/i'                     => "$1zes",
           '/^(ox)$/i'                      => "$1en",
@@ -80,6 +81,7 @@
           '/$/'                            => "s"
       ];
 
+      /** @var array */
       static $singular = [
           '/(quiz)zes$/i'                                                    => "$1",
           '/(matr)ices$/i'                                                   => "$1ix",
@@ -111,6 +113,7 @@
           '/s$/i'                                                            => ""
       ];
 
+      /** @var array */
       static $irregular = [
           'move'   => 'moves',
           'foot'   => 'feet',
@@ -123,6 +126,7 @@
           'valve'  => 'valves'
       ];
 
+      /** @var array */
       static $uncountable = [
           'sheep',
           'fish',
@@ -136,7 +140,7 @@
           'equipment'
       ];
 
-      public static function pluralize($string) {
+      public static function pluralize(string $string): string {
           // save some time in the case that singular and plural are the same
           if (in_array(strtolower($string), self::$uncountable)) {
               return $string;
@@ -162,7 +166,7 @@
           return $string;
       }
 
-      public static function singularize($string) {
+      public static function singularize(string $string): string {
           // save some time in the case that singular and plural are the same
           if (in_array(strtolower($string), self::$uncountable)) {
               return $string;
@@ -187,7 +191,7 @@
           return $string;
       }
 
-      public static function pluralize_if($count, $string) {
+      public static function pluralize_if(int $count, string $string): string {
           if ($count == 1) {
               return "1 $string";
           } else {

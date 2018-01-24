@@ -4,7 +4,7 @@
     /**
      * @param $sMessage
      */
-    function _output($sMessage) {
+    function _output($sMessage): void {
         if (isCli() || contentTypeIsNotHtml()) {
             $sMessage = str_replace('<br />', "\n", $sMessage);
             $sMessage = str_replace('<pre>',  '', $sMessage);
@@ -14,7 +14,7 @@
         echo $sMessage;
     }
 
-    function dbg(...$aArgs) {
+    function dbg(...$aArgs): void {
         $sTitle = '';
 
         if (count($aArgs) > 1) {
@@ -33,7 +33,7 @@
         foreach ($aArgs as $mArg) {
             if (is_object($mArg)
             ||  is_array($mArg)) {
-                _output('<pre>' . print_r($mArg, 1) . '</pre>');
+                _output('<pre>' . print_r($mArg, true) . '</pre>');
             } else {
                 _output($mArg . "<br />");
             }

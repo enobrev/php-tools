@@ -64,7 +64,7 @@
          * @param  int     $iLevel   The logging level
          * @param  string  $sMessage The log message
          * @param  array   $aContext The log context
-         * @return Boolean Whether the record has been processed
+         * @return boolean Whether the record has been processed
          */
         private static function addRecord($iLevel, $sMessage, array $aContext = array()) {
             self::incrementCurrentIndex();
@@ -78,12 +78,12 @@
         }
 
         /**
-         * @param        $arr
-         * @param        $path
-         * @param        $value
+         * @param array  $arr
+         * @param string $path
+         * @param mixed  $value
          * @param string $separator
          */
-        private static function assignArrayByPath(&$arr, $path, $value, $separator = '.') {
+        private static function assignArrayByPath(array &$arr, string $path, mixed $value, string $separator = '.'): void {
             $keys = explode($separator, $path);
 
             foreach ($keys as $key) {
@@ -94,11 +94,11 @@
         }
 
         /**
-         * @param       $sMessage
-         * @param array $aContext
+         * @param string $sMessage
+         * @param array  $aContext
          * @return array
          */
-        private static function prepareContext($sMessage, array $aContext = []) {
+        private static function prepareContext(string $sMessage, array $aContext = []): array {
             self::$iGlobalIndex++;
 
             $aLog = [
@@ -142,14 +142,14 @@
         /**
          * @param string $sService
          */
-        public static function setService(string $sService) {
+        public static function setService(string $sService): void {
             self::$sService = $sService;
         }
 
         /**
          * @param array $aContext
          */
-        public static function justAddContext(array $aContext) {
+        public static function justAddContext(array $aContext): void {
             self::prepareContext('', $aContext);
         }
 
@@ -157,25 +157,25 @@
          * @param string $sTag
          * @param        $mValue
          */
-        public static function addTag(string $sTag, $mValue) {
+        public static function addTag(string $sTag, mixed $mValue): void {
             self::$aSettings[self::getCurrentRequestHash()]['tags'][$sTag] = $mValue;
         }
 
         /**
          * @param bool $bIsError
          */
-        public static function setProcessIsError(bool $bIsError) {
+        public static function setProcessIsError(bool $bIsError): void {
             self::$aSettings[self::getCurrentRequestHash()]['error'] = $bIsError;
         }
 
         /**
          * @param string $sPurpose
          */
-        public static function setPurpose(string $sPurpose) {
+        public static function setPurpose(string $sPurpose): void {
             self::$aSettings[self::getCurrentRequestHash()]['name'] = $sPurpose;
         }
 
-        private static function incrementCurrentIndex() {
+        private static function incrementCurrentIndex(): void {
             $iSpans = count(self::$aSpans);
             if ($iSpans <= 0) {
                 return;
@@ -184,19 +184,19 @@
             self::$aSpans[$iSpans - 1]['--ri']++;
         }
 
-        private static function getCurrentRequestHash() {
+        private static function getCurrentRequestHash(): string {
             return self::$aSpans[count(self::$aSpans) - 1]['--r'];
         }
 
-        private static function getCurrentSpan() {
+        private static function getCurrentSpan(): array {
             return self::$aSpans[count(self::$aSpans) - 1];
         }
 
-        private static function getCurrentSettings() {
+        private static function getCurrentSettings(): array {
             return self::$aSettings[self::getCurrentRequestHash()];
         }
 
-        public static function enableJSON() {
+        public static function enableJSON(): void {
             self::$bJSONLogs = true;
         }
 
@@ -205,7 +205,7 @@
          *
          * @param  string  $sMessage The log message
          * @param  array   $aContext The log context
-         * @return Boolean Whether the record has been processed
+         * @return boolean Whether the record has been processed
          */
         public static function d($sMessage, array $aContext = array()) {
             return self::addRecord(Monolog\Logger::DEBUG, $sMessage, $aContext);
@@ -216,7 +216,7 @@
          *
          * @param  string  $sMessage The log message
          * @param  array   $aContext The log context
-         * @return Boolean Whether the record has been processed
+         * @return boolean Whether the record has been processed
          */
         public static function i($sMessage, array $aContext = array()) {
             return self::addRecord(Monolog\Logger::INFO, $sMessage, $aContext);
@@ -227,7 +227,7 @@
          *
          * @param  string  $sMessage The log message
          * @param  array   $aContext The log context
-         * @return Boolean Whether the record has been processed
+         * @return boolean Whether the record has been processed
          */
         public static function n($sMessage, array $aContext = array()) {
             return self::addRecord(Monolog\Logger::NOTICE, $sMessage, $aContext);
@@ -238,7 +238,7 @@
          *
          * @param  string  $sMessage The log message
          * @param  array   $aContext The log context
-         * @return Boolean Whether the record has been processed
+         * @return boolean Whether the record has been processed
          */
         public static function w($sMessage, array $aContext = array()) {
             return self::addRecord(Monolog\Logger::WARNING, $sMessage, $aContext);
@@ -249,7 +249,7 @@
          *
          * @param  string  $sMessage The log message
          * @param  array   $aContext The log context
-         * @return Boolean Whether the record has been processed
+         * @return boolean Whether the record has been processed
          */
         public static function e($sMessage, array $aContext = array()) {
             return self::addRecord(Monolog\Logger::ERROR, $sMessage, $aContext);
@@ -260,7 +260,7 @@
          *
          * @param  string  $sMessage The log message
          * @param  array   $aContext The log context
-         * @return Boolean Whether the record has been processed
+         * @return boolean Whether the record has been processed
          */
         public static function c($sMessage, array $aContext = array()) {
             return self::addRecord(Monolog\Logger::CRITICAL, $sMessage, $aContext);
@@ -271,7 +271,7 @@
          *
          * @param  string  $sMessage The log message
          * @param  array   $aContext The log context
-         * @return Boolean Whether the record has been processed
+         * @return boolean Whether the record has been processed
          */
         public static function a($sMessage, array $aContext = array()) {
             return self::addRecord(Monolog\Logger::ALERT, $sMessage, $aContext);
@@ -282,7 +282,7 @@
          *
          * @param  string  $sMessage The log message
          * @param  array   $aContext The log context
-         * @return Boolean Whether the record has been processed
+         * @return boolean Whether the record has been processed
          */
         public static function em($sMessage, array $aContext = array()) {
             return self::addRecord(Monolog\Logger::EMERGENCY, $sMessage, $aContext);
@@ -291,7 +291,7 @@
         /**
          * @param TimeKeeper $oTimer
          */
-        public static function dt(TimeKeeper $oTimer) {
+        public static function dt(TimeKeeper $oTimer): void {
             self::d($oTimer->label(), ['--ms' => $oTimer->stop()]);
         }
 
@@ -299,7 +299,7 @@
          * @param $sLabel
          * @return TimeKeeper
          */
-        public static function startTimer(string $sLabel) {
+        public static function startTimer(string $sLabel): TimeKeeper {
             return self::$aSettings[self::getCurrentRequestHash()]['metrics']->start($sLabel);
         }
 
@@ -308,21 +308,21 @@
          *
          * @return float
          */
-        public static function stopTimer(string $sLabel) {
+        public static function stopTimer(string $sLabel): float {
             return self::$aSettings[self::getCurrentRequestHash()]['metrics']->stop($sLabel);
         }
 
         /**
          * @return string
          */
-        public static function getRequestHashForOutput() {
+        public static function getRequestHashForOutput(): string {
             return self::getCurrentRequestHash();
         }
 
         /**
          * Sets the Parent Hash to the current Hash, and then resets the Request Hash
          */
-        public static function startChildRequest() {
+        public static function startChildRequest(): void {
             $aContext  = [];
             $aSettings = self::getCurrentSettings();
             if (isset($aSettings['context']['user'])) {
@@ -335,7 +335,7 @@
         /**
          * Retrieves the previous request hash
          */
-        public static function endChildRequest() {
+        public static function endChildRequest(): void {
             self::stopTimer('_REQUEST');
             self::summary();
             array_pop(self::$aSpans);
@@ -344,7 +344,7 @@
         /**
          * @return string
          */
-        private static function getThreadHash() {
+        private static function getThreadHash(): string {
             if (self::$sThreadHash !== NULL) {
                 // Fall Through
             } else if (isset($_REQUEST['--t'])) {
@@ -361,7 +361,7 @@
         /**
          * @param array $aContext
          */
-        public static function initSpan(array $aContext = []) {
+        public static function initSpan(array $aContext = []): void {
             $oStartTime      = notNowByRightNow();
             $sIP             = get_ip();
             $aRequestDetails = [
@@ -379,7 +379,7 @@
                 $sPath        = count($aPath) > 0 ? implode('.', $aPath) . '.' : '';
                 $sRequestHash = $sPath . substr(hash('sha1', json_encode($aRequestDetails)), 0, 6);
             */
-            $sRequestHash = substr(hash('sha1', json_encode($aRequestDetails)), 0, 8);
+            $sRequestHash = substr(hash('sha1', (string) json_encode($aRequestDetails)), 0, 8);
 
             $aSpan = [
                 '--ri'     => 0,
@@ -424,7 +424,11 @@
             self::startTimer('_REQUEST');
         }
 
-        public static function summary($sOverrideName = 'Summary') {
+        /**
+         * @param string $sOverrideName
+         * @throws \Exception
+         */
+        public static function summary(string $sOverrideName = 'Summary'): void {
             self::incrementCurrentIndex();
             $iTimer    = self::stopTimer('_REQUEST');
             $aSettings = self::getCurrentSettings();

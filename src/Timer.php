@@ -49,7 +49,7 @@
 
         /**
          * @param string $sLabel
-         * @return TimeKeeper
+         * @return TimeKeeper|null
          */
         public function &get(string $sLabel) {
             if (isset($this->aTimers[$sLabel])) {
@@ -80,7 +80,7 @@
 
         /**
          * @param string $sLabel
-         * @return float
+         * @return float|null
          */
         public function stop(string $sLabel) {
             $oTimeKeeper = &$this->get($sLabel);

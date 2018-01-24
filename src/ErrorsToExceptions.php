@@ -7,10 +7,10 @@
      * http://us3.php.net/manual/en/function.set-error-handler.php#112881
      * throw exceptions based on E_* error types
      */
-    set_error_handler(function ($err_severity, $err_msg, $err_file, $err_line, array $err_context)
+    set_error_handler(function (int $err_severity, string $err_msg, string $err_file, int $err_line, array $err_context): void
     {
         // error was suppressed with the @-operator
-        if (0 === error_reporting()) { return false;}
+        if (0 === error_reporting()) { return; }
         switch($err_severity)
         {
             case E_ERROR:               throw new ErrorException            ($err_msg, 0, $err_severity, $err_file, $err_line);
