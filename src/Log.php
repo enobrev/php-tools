@@ -293,9 +293,10 @@
 
         /**
          * @param TimeKeeper $oTimer
+         * @param array      $aContext
          */
-        public static function dt(TimeKeeper $oTimer): void {
-            self::d($oTimer->label(), ['--ms' => $oTimer->stop()]);
+        public static function dt(TimeKeeper $oTimer, array $aContext = []): void {
+            self::d($oTimer->label(), array_merge($aContext, ['--ms' => $oTimer->stop()]));
         }
 
         /**
