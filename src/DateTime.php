@@ -4,11 +4,11 @@
     use DateTime;
 
     /**
+     * https://stackoverflow.com/a/29598719/14651
+     *
      * Returns DateTime object with proper microtime
      * @return DateTime
      */
-    function notNowByRightNow() {
-        $aMicroTime    = explode(' ', microtime());
-        $iMicroSeconds = (int) $aMicroTime[0] * 1000000;
-        return new DateTime(date('Y-m-d H:i:s.' . $iMicroSeconds, (int) $aMicroTime[1]));
+    function notNowButRightNow() {
+        return DateTime::createFromFormat('U.u', number_format(microtime(true), 6, '.', ''));
     }

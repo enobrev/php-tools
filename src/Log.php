@@ -363,7 +363,7 @@
             } else if (isset($_SERVER['NGINX_REQUEST_ID'])) {
                 self::$sThreadHash = $_SERVER['NGINX_REQUEST_ID'];
             } else {
-                self::$sThreadHash = substr(hash('sha1', notNowByRightNow()->format('Y-m-d G:i:s.u')), 0, 6);
+                self::$sThreadHash = substr(hash('sha1', notNowButRightNow()->format('Y-m-d G:i:s.u')), 0, 6);
             }
 
             return self::$sThreadHash;
@@ -373,7 +373,7 @@
          * @param array $aContext
          */
         public static function initSpan(array $aContext = []): void {
-            $oStartTime      = notNowByRightNow();
+            $oStartTime      = notNowButRightNow();
             $sIP             = get_ip();
             $aRequestDetails = [
                 'date' => $oStartTime->format('Y-m-d H:i:s.u')
@@ -456,7 +456,7 @@
                             [
                                 '_format'         => 'SSFSpan.DashedTrace',
                                 'version'         => 1,
-                                'end_timestamp'   => notNowByRightNow()->format(self::TIMESTAMP_FORMAT),
+                                'end_timestamp'   => notNowButRightNow()->format(self::TIMESTAMP_FORMAT),
                                 'service'         => self::$sService,
                                 'indicator'       => false
                             ],
