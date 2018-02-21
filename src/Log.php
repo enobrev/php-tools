@@ -324,6 +324,13 @@
         }
 
         /**
+         * @return string
+         */
+        public static function getThreadHashForOutput(): string {
+            return self::getThreadHash();
+        }
+
+        /**
          * Sets the Parent Hash to the current Hash, and then resets the Request Hash
          */
         public static function startChildRequest(): void {
