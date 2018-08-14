@@ -3,7 +3,7 @@
 
     require __DIR__ . '/../vendor/autoload.php';
 
-    use PHPUnit_Framework_TestCase as TestCase;
+    use PHPUnit\Framework\TestCase;
  
     class DepluralizeTest extends TestCase {
         private $aWords;
