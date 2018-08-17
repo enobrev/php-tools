@@ -19,7 +19,7 @@
      * @param array $aArray
      * @return bool
      */
-    function array_is_multi(array $aArray) {
+    function array_is_multi(array $aArray):bool {
         foreach ($aArray as $mValue) {
             if (is_array($mValue)) return true;
         }
@@ -40,4 +40,16 @@
         }
 
         return $aResponse;
+    }
+
+    /**
+     * @param array $aArray
+     * @return bool
+     */
+    function array_is_associative(array $aArray):bool {
+        if (count($aArray) == 0) {
+            return true;
+        }
+
+        return array_keys($aArray) !== range(0, count($aArray) - 1);
     }
