@@ -46,10 +46,10 @@
      * @param array $aArray
      * @return bool
      */
-    function array_is_associative(array $aArray):bool {
+    function array_not_associative(array $aArray):bool {
         if (count($aArray) == 0) {
             return true;
         }
 
-        return array_keys($aArray) !== range(0, count($aArray) - 1);
+        return array_keys($aArray) === range(0, count($aArray) - 1);
     }
