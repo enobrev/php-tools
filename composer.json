@@ -23,7 +23,6 @@
         "php": ">=7.1.0",
         "ext-json": "*",
         "monolog/monolog": "^1.21",
-        "vimeo/psalm": "^2.0",
         "zendframework/zend-diactoros": "^1.8",
         "adbario/php-dot-notation": "dev-recursive-merge"
     },
@@ -41,6 +40,7 @@
         ]
     },
     "require-dev": {
-        "phpunit/phpunit": "^7.1"
+        "phpunit/phpunit": "^7.1",
+        "vimeo/psalm": "^2.0"
     }
 }
