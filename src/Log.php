@@ -341,12 +341,6 @@
             }
 
             if (self::$oServerRequest) {
-                $aServerParams = self::$oServerRequest->getServerParams();
-                if ($aServerParams && isset($aServerParams['NGINX_REQUEST_ID'])) {
-                    self::$sThreadHash = $aServerParams['NGINX_REQUEST_ID'];
-                    return self::$sThreadHash;
-                }
-
                 $aGetParams = self::$oServerRequest->getQueryParams();
                 if ($aGetParams && isset($aGetParams['--t'])) {
                     self::$sThreadHash = $aGetParams['--t'];
@@ -366,13 +360,25 @@
                 }
             }
 
-            if (isset($_SERVER['NGINX_REQUEST_ID'])) {
-                self::$sThreadHash = $_SERVER['NGINX_REQUEST_ID'];
+            if (isset($_REQUEST['--t'])) {
+                self::$sThreadHash = $_REQUEST['--t'];
                 return self::$sThreadHash;
             }
 
-            if (isset($_REQUEST['--t'])) {
-                self::$sThreadHash = $_REQUEST['--t'];
+            if (self::$oServerRequest) {
+                $aServerParams = self::$oServerRequest->getServerParams();
+                if ($aServerParams && isset($aServerParams['NGINX_REQUEST_ID'])) {
+                    // NGINX Request ID should be last because that should always be set, but
+                    // We prefer to use any thread hash sent in from another proces
+                    self::$sThreadHash = $aServerParams['NGINX_REQUEST_ID'];
+                    return self::$sThreadHash;
+                }
+            }
+
+            if (isset($_SERVER['NGINX_REQUEST_ID'])) {
+                // NGINX Request ID should be last because that should always be set, but
+                // We prefer to use any thread hash sent in from another proces
+                self::$sThreadHash = $_SERVER['NGINX_REQUEST_ID'];
                 return self::$sThreadHash;
             }
 
@@ -449,6 +455,10 @@
                 'context'         => $aContext,
                 'metrics'         => new Timer()
             ];
+
+            if (isset($aRequestDetails['uri'])) {
+                self::$aSettings[$sRequestHash]['uri']      = $aRequestDetails['uri'];
+            }
 
             if (isset($aRequestDetails['referrer'])) {
                 self::$aSettings[$sRequestHash]['referrer'] = $aRequestDetails['referrer'];
