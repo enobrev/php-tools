@@ -450,6 +450,14 @@
                 'metrics'         => new Timer()
             ];
 
+            if (isset($aRequestDetails['referrer'])) {
+                self::$aSettings[$sRequestHash]['referrer'] = $aRequestDetails['referrer'];
+            }
+
+            if (isset($aRequestDetails['host'])) {
+                self::$aSettings[$sRequestHash]['host']     = $aRequestDetails['host'];
+            }
+
             if ($sThreadHash = Log::getThreadHash()) {
                 $aSpan['--t'] = $sThreadHash;
             }
