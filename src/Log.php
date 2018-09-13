@@ -1,17 +1,22 @@
 <?php
     namespace Enobrev;
 
-    use DateTime;
+    use Adbar\Dot;
     use Monolog;
     use Monolog\Formatter\LineFormatter;
     use Monolog\Handler\SyslogHandler;
+    use Psr\Http\Message\ServerRequestInterface;
+    use Zend\Diactoros\ServerRequestFactory;
 
     class Log {
         /** @var Monolog\Logger */
         private static $oLog  = null;
 
+        /** @var ServerRequestInterface */
+        private static $oServerRequest = null;
+
         /** @var string */
-        private static $sService = null;
+        private static $sService = 'Enobrev_Logger_Replace_Me';
 
         /** @var bool */
         private static $bJSONLogs = false;
@@ -28,18 +33,13 @@
         /** @var  int */
         private static $iGlobalIndex = 0;
 
-        const TIMESTAMP_FORMAT = 'Y-m-d H:i:s.u';
+        const TIMESTAMP_FORMAT = DATE_RFC3339_EXTENDED;
 
         /**
          * @return Monolog\Logger
-         * @throws \Exception
          */
         private static function initLogger() {
             if (self::$oLog === null) {
-                if (self::$sService === null) {
-                    throw new \Exception("Please set a Service Name for the Logger using Enobrev\\Log::setService()");
-                }
-
                 register_shutdown_function([self::class, 'summary']);
 
                 self::$oLog = new Monolog\Logger(self::$sService);
@@ -81,22 +81,6 @@
         }
 
         /**
-         * @param array  $arr
-         * @param string $path
-         * @param mixed  $value
-         * @param string $separator
-         */
-        private static function assignArrayByPath(array &$arr, string $path, $value, string $separator = '.'): void {
-            $keys = explode($separator, $path);
-
-            foreach ($keys as $key) {
-                $arr = &$arr[$key];
-            }
-
-            $arr = $value;
-        }
-
-        /**
          * @param string $sMessage
          * @param array  $aContext
          * @return array
@@ -104,18 +88,18 @@
         private static function prepareContext(string $sMessage, array $aContext = []): array {
             self::$iGlobalIndex++;
 
-            $aLog = [
+            $oLog = new Dot([
                 '--action' => $sMessage,
                 '--i'      => self::$iGlobalIndex
-            ];
+            ]);
 
-            $sRequestHash = self::getCurrentRequestHash();
-            $aSettingsContext =& self::$aSettings[$sRequestHash]['context'];
+            $sRequestHash  = self::getCurrentRequestHash();
+            $oLocalContext = new Dot(self::$aSettings[$sRequestHash]['context']);
 
             if ($aContext && is_array($aContext) && count($aContext)) {
                 foreach ($aContext as $sKey => $mValue) {
                     if (strncmp($sKey, "--", 2) === 0) {
-                        $aLog[$sKey] = $mValue;
+                        $oLog->mergeRecursiveDistinct($sKey, $mValue);
                         unset($aContext[$sKey]);
                     }
 
@@ -124,22 +108,18 @@
                         $aContext[$sStrippedKey] = $mValue;
                         unset($aContext[$sKey]);
 
-                        if (is_array($mValue)
-                        &&  isset($aSettingsContext[$sStrippedKey])
-                        &&  is_array($aSettingsContext[$sStrippedKey])) {
-                            $aSettingsContext[$sStrippedKey] = array_merge($aSettingsContext[$sStrippedKey], $mValue);
-                        } else {
-                            $aSettingsContext[$sStrippedKey] = $mValue;
-                        }
+                        $oLocalContext->mergeRecursiveDistinct($sStrippedKey, $mValue);
                     }
                 }
 
                 if (count($aContext)) {
-                    self::assignArrayByPath($aLog, $sMessage, $aContext);
+                    $oLog->mergeRecursiveDistinct($sMessage, $aContext);
                 }
             }
 
-            return $aLog;
+            self::$aSettings[$sRequestHash]['context'] = $oLocalContext->all();
+
+            return $oLog->all();
         }
 
         /**
@@ -340,7 +320,7 @@
                 $aContext['user'] = $aSettings['context']['user'];
             }
 
-            self::initSpan($aContext);
+            self::initSpan(self::$oServerRequest, $aContext);
         }
 
         /**
@@ -357,33 +337,97 @@
          */
         private static function getThreadHash(): string {
             if (self::$sThreadHash !== NULL) {
-                // Fall Through
-            } else if (isset($_REQUEST['--t'])) {
-                self::$sThreadHash = $_REQUEST['--t'];
-            } else if (isset($_SERVER['NGINX_REQUEST_ID'])) {
-                self::$sThreadHash = $_SERVER['NGINX_REQUEST_ID'];
-            } else {
-                self::$sThreadHash = substr(hash('sha1', notNowButRightNow()->format('Y-m-d G:i:s.u')), 0, 6);
+                return self::$sThreadHash;
             }
 
+            if (self::$oServerRequest) {
+                $aServerParams = self::$oServerRequest->getServerParams();
+                if ($aServerParams && isset($aServerParams['NGINX_REQUEST_ID'])) {
+                    self::$sThreadHash = $aServerParams['NGINX_REQUEST_ID'];
+                    return self::$sThreadHash;
+                }
+
+                $aGetParams = self::$oServerRequest->getQueryParams();
+                if ($aGetParams && isset($aGetParams['--t'])) {
+                    self::$sThreadHash = $aGetParams['--t'];
+                    return self::$sThreadHash;
+                }
+
+                $aPostParams = self::$oServerRequest->getParsedBody();
+                if ($aPostParams && isset($aPostParams['--t'])) {
+                    self::$sThreadHash = $aPostParams['--t'];
+                    return self::$sThreadHash;
+                }
+
+                $aHeader = self::$oServerRequest->getHeader('--t');
+                if (is_array($aHeader) && count($aHeader)) {
+                    self::$sThreadHash = $aHeader[0];
+                    return self::$sThreadHash;
+                }
+            }
+
+            if (isset($_SERVER['NGINX_REQUEST_ID'])) {
+                self::$sThreadHash = $_SERVER['NGINX_REQUEST_ID'];
+                return self::$sThreadHash;
+            }
+
+            if (isset($_REQUEST['--t'])) {
+                self::$sThreadHash = $_REQUEST['--t'];
+                return self::$sThreadHash;
+            }
+
+            self::$sThreadHash = substr(hash('sha1', notNowButRightNow()->format('Y-m-d G:i:s.u')), 0, 6);
             return self::$sThreadHash;
         }
 
         /**
+         * @return string
+         */
+        private static function getParentHash(): ?string {
+            if (self::$oServerRequest) {
+                $aGetParams = self::$oServerRequest->getQueryParams();
+                if ($aGetParams && isset($aGetParams['--p'])) {
+                    return $aGetParams['--p'];
+                }
+
+                $aPostParams = self::$oServerRequest->getParsedBody();
+                if ($aPostParams && isset($aPostParams['--p'])) {
+                    return $aPostParams['--p'];
+                }
+
+                $aHeader = self::$oServerRequest->getHeader('--p');
+                if (is_array($aHeader) && count($aHeader)) {
+                    return $aHeader[0];
+                }
+            }
+
+            if (isset($_REQUEST['--p'])) {
+                return $_REQUEST['--p'];
+            }
+
+            return null;
+        }
+
+        /**
+         * @param ServerRequestInterface $oRequest
          * @param array $aContext
          */
-        public static function initSpan(array $aContext = []): void {
-            $oStartTime      = notNowButRightNow();
-            $sIP             = get_ip();
-            $aRequestDetails = [
+        public static function initSpan(ServerRequestInterface $oRequest, array $aContext = []): void {
+            self::$oServerRequest = $oRequest;
+
+            $oStartTime          = notNowButRightNow();
+            $sIP                 = get_ip();
+            $aRequestDetails     = [
                 'date' => $oStartTime->format('Y-m-d H:i:s.u')
             ];
 
-            if (isset($_SERVER['HTTP_REFERER']))    { $aRequestDetails['referrer']   = $_SERVER['HTTP_REFERER'];     }
-            if (isset($_SERVER['REQUEST_URI']))     { $aRequestDetails['uri']        = $_SERVER['REQUEST_URI'];      }
-            if (isset($_SERVER['HTTP_HOST']))       { $aRequestDetails['host']       = $_SERVER['HTTP_HOST'];        }
-            if (isset($_SERVER['HTTP_USER_AGENT'])) { $aRequestDetails['agent']      = $_SERVER['HTTP_USER_AGENT'];  }
-            if ($sIP != 'unknown')                  { $aRequestDetails['ip']         = $sIP;                         }
+            $aServerParams       = self::$oServerRequest->getServerParams();
+
+            if (isset($aServerParams['HTTP_REFERER']))    { $aRequestDetails['referrer']   = $aServerParams['HTTP_REFERER'];     }
+            if (isset($aServerParams['REQUEST_URI']))     { $aRequestDetails['uri']        = $aServerParams['REQUEST_URI'];      }
+            if (isset($aServerParams['HTTP_HOST']))       { $aRequestDetails['host']       = $aServerParams['HTTP_HOST'];        }
+            if (isset($aServerParams['HTTP_USER_AGENT'])) { $aRequestDetails['agent']      = $aServerParams['HTTP_USER_AGENT'];  }
+            if ($sIP != 'unknown')                        { $aRequestDetails['ip']         = $sIP;                               }
 
             /*
                 $aPath        = array_column(self::$aSpans, '--r');
@@ -412,8 +456,8 @@
 
             if (count(self::$aSpans) > 0) {
                 $aSpan['--p'] = self::$aSpans[count(self::$aSpans) - 1]['--r'];
-            } else if (isset($_REQUEST['--p'])) {
-                $aSpan['--p'] = $_REQUEST['--p'];
+            } else if ($sParentHash = self::getParentHash()) {
+                $aSpan['--p'] = $sParentHash;
             }
 
             $aUser = [];
@@ -437,7 +481,6 @@
 
         /**
          * @param string $sOverrideName
-         * @throws \Exception
          * @psalm-suppress UndefinedClass
          */
         public static function summary(string $sOverrideName = 'Summary'): void {
@@ -471,4 +514,4 @@
         }
     }
 
-    Log::initSpan();
+    Log::initSpan(ServerRequestFactory::fromGlobals());

@@ -13,11 +13,19 @@
         {
             "type": "vcs",
             "url": "https://github.com/enobrev/php-tools"
+        },
+        {
+            "type": "vcs",
+            "url":  "https://github.com/melbings/php-dot-notation.git"
         }
     ],
     "require": {
+        "php": ">=7.1.0",
+        "ext-json": "*",
         "monolog/monolog": "^1.21",
-        "vimeo/psalm": "^2.0"
+        "vimeo/psalm": "^2.0",
+        "zendframework/zend-diactoros": "^1.8",
+        "adbario/php-dot-notation": "dev-recursive-merge"
     },
     "autoload": {
         "psr-4" : {
