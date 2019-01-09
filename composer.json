@@ -26,7 +26,7 @@
         "ext-json": "*",
         "adbario/php-dot-notation": "^2.2",
         "monolog/monolog": "^1.21",
-        "zendframework/zend-diactoros": "^1.8.6"
+        "zendframework/zend-diactoros": "1.8.6"
     },
     "autoload": {
         "psr-4" : {
