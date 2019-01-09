@@ -24,6 +24,12 @@
         /** @var string */
         private static $sThreadHash = null;
 
+        /** @var string */
+        private static $sOriginalThreadHash = null;
+
+        /** @var string */
+        private static $sOriginalRequestHash = null;
+
         /** @var array  */
         private static $aSpans = [];
 
@@ -331,6 +337,31 @@
             self::stopTimer('_REQUEST');
             self::summary();
             array_pop(self::$aSpans);
+        }
+
+        /**
+         * Sets the Parent Hash to the current Hash, and then resets the Request Hash
+         */
+        public static function startOverrideRequest(string $sThreadHash, string $sParentHash): void {
+            self::$sOriginalThreadHash = self::$sThreadHash;
+            self::$sThreadHash = $sThreadHash;
+
+            self::$sOriginalRequestHash = self::getCurrentRequestHash();
+            self::$aSpans[count(self::$aSpans) - 1]['--r'] = $sParentHash;
+
+            self::$aSettings[$sParentHash] = self::$aSettings[self::$sOriginalRequestHash];
+
+            self::startChildRequest();
+        }
+
+        /**
+         * Retrieves the previous request hash
+         */
+        public static function endOverrideRequest(): void {
+            self::endChildRequest();
+
+            self::$sThreadHash = self::$sOriginalThreadHash;
+            self::$aSpans[count(self::$aSpans) - 1]['--r'] = self::$sOriginalRequestHash;
         }
 
         /**
