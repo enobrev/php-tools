@@ -99,7 +99,11 @@
             if ($aContext && is_array($aContext) && count($aContext)) {
                 foreach ($aContext as $sKey => $mValue) {
                     if (strncmp($sKey, "--", 2) === 0) {
-                        $oLog->mergeRecursiveDistinct($sKey, $mValue);
+                        if (!is_scalar($mValue)) {
+                            $oLog->mergeRecursiveDistinct($sKey, $mValue);
+                        } else {
+                            $oLog->set($sKey, $mValue);
+                        }
                         unset($aContext[$sKey]);
                     }
 
@@ -118,7 +122,6 @@
             }
 
             self::$aSettings[$sRequestHash]['context'] = $oLocalContext->all();
-
             return $oLog->all();
         }
 
@@ -495,7 +498,7 @@
             $iTimer    = self::stopTimer('_REQUEST');
             $aSettings = self::getCurrentSettings();
             $aSettings['metrics'] = json_encode($aSettings['metrics']->stats());
-
+            
             $aMessage = array_merge(
                 self::prepareContext(
                     self::$sService . '.' . $sOverrideName,
