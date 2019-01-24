@@ -24,12 +24,6 @@
         /** @var string */
         private static $sThreadHash = null;
 
-        /** @var string */
-        private static $sOriginalThreadHash = null;
-
-        /** @var string */
-        private static $sOriginalRequestHash = null;
-
         /** @var array  */
         private static $aSpans = [];
 
@@ -340,31 +334,6 @@
         }
 
         /**
-         * Sets the Parent Hash to the current Hash, and then resets the Request Hash
-         */
-        public static function startOverrideRequest(string $sThreadHash, string $sParentHash): void {
-            self::$sOriginalThreadHash = self::$sThreadHash;
-            self::$sThreadHash = $sThreadHash;
-
-            self::$sOriginalRequestHash = self::getCurrentRequestHash();
-            self::$aSpans[count(self::$aSpans) - 1]['--r'] = $sParentHash;
-
-            self::$aSettings[$sParentHash] = self::$aSettings[self::$sOriginalRequestHash];
-
-            self::startChildRequest();
-        }
-
-        /**
-         * Retrieves the previous request hash
-         */
-        public static function endOverrideRequest(): void {
-            self::endChildRequest();
-
-            self::$sThreadHash = self::$sOriginalThreadHash;
-            self::$aSpans[count(self::$aSpans) - 1]['--r'] = self::$sOriginalRequestHash;
-        }
-
-        /**
          * @return string
          */
         private static function getThreadHash(): string {
@@ -488,18 +457,6 @@
                 'metrics'         => new Timer()
             ];
 
-            if (isset($aRequestDetails['uri'])) {
-                self::$aSettings[$sRequestHash]['uri']      = $aRequestDetails['uri'];
-            }
-
-            if (isset($aRequestDetails['referrer'])) {
-                self::$aSettings[$sRequestHash]['referrer'] = $aRequestDetails['referrer'];
-            }
-
-            if (isset($aRequestDetails['host'])) {
-                self::$aSettings[$sRequestHash]['host']     = $aRequestDetails['host'];
-            }
-
             if ($sThreadHash = Log::getThreadHash()) {
                 $aSpan['--t'] = $sThreadHash;
             }
@@ -550,8 +507,7 @@
                                 '_format'         => 'SSFSpan.DashedTrace',
                                 'version'         => 1,
                                 'end_timestamp'   => notNowButRightNow()->format(self::TIMESTAMP_FORMAT),
-                                'service'         => self::$sService,
-                                'indicator'       => false
+                                'service'         => self::$sService
                             ],
                             $aSettings
                         )
