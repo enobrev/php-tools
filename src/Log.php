@@ -362,6 +362,12 @@
                     self::$sThreadHash = $aHeader[0];
                     return self::$sThreadHash;
                 }
+
+                self::parseJSONBodyForIndices();
+                if (isset(self::$aIndices['--t'])) {
+                    self::$sThreadHash = self::$aIndices['--t'];
+                    return self::$sThreadHash;
+                }
             }
 
             if (isset($_REQUEST['--t'])) {
@@ -390,6 +396,44 @@
             return self::$sThreadHash;
         }
 
+        private static $aIndices    = [];
+        private static $bJSONParsed = false;
+
+        private static function parseJSONBodyForIndices() {
+            if (self::$bJSONParsed) {
+                return;
+            }
+
+            self::$bJSONParsed = true;
+
+            if (self::$oServerRequest) {
+                $aContentType = self::$oServerRequest->getHeader('Content-Type');
+
+                if ($aContentType) {
+                    $aParts = explode(';', $aContentType[0]);
+                    $sMime = trim(array_shift($aParts));
+
+                    if (preg_match('~[/+]json$~', $sMime)) {
+                        $sBody = (string)self::$oServerRequest->getBody();
+
+                        if (!empty($sBody)) {
+                            $aParsedBody = json_decode($sBody, true);
+
+                            if (json_last_error() === JSON_ERROR_NONE) {
+                                if (isset($aParsedBody['--t'])) {
+                                    self::$aIndices['--t'] = $aParsedBody['--t'];
+                                }
+
+                                if (isset($aParsedBody['--p'])) {
+                                    self::$aIndices['--p'] = $aParsedBody['--p'];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         /**
          * @return string
          */
@@ -408,6 +452,12 @@
                 $aHeader = self::$oServerRequest->getHeader('--p');
                 if (is_array($aHeader) && count($aHeader)) {
                     return $aHeader[0];
+                }
+
+                self::parseJSONBodyForIndices();
+                if (isset(self::$aIndices['--p'])) {
+                    self::$sThreadHash = self::$aIndices['--p'];
+                    return self::$sThreadHash;
                 }
             }
 
