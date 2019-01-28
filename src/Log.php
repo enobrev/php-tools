@@ -33,6 +33,11 @@
         /** @var  int */
         private static $iGlobalIndex = 0;
 
+        private static $aDisabled = [
+            'd'  => false,
+            'dt' => false
+        ];
+
         const TIMESTAMP_FORMAT = DATE_RFC3339_EXTENDED;
 
         /**
@@ -186,6 +191,14 @@
             self::$bJSONLogs = true;
         }
 
+        public static function disableD($bDisabled = true): void {
+            self::$aDisabled['d'] = $bDisabled;
+        }
+
+        public static function disableDT($bDisabled = true): void {
+            self::$aDisabled['dt'] = $bDisabled;
+        }
+
         /**
          * Adds a log record at the DEBUG level.
          *
@@ -194,6 +207,11 @@
          * @return boolean Whether the record has been processed
          */
         public static function d($sMessage, array $aContext = array()) {
+            if (self::$aDisabled['d']) {
+                self::justAddContext($aContext);
+                return false;
+            }
+
             return self::addRecord(Monolog\Logger::DEBUG, $sMessage, $aContext);
         }
 
@@ -280,6 +298,12 @@
          */
         public static function dt(TimeKeeper $oTimer, array $aContext = []): void {
             $aContext['--ms'] = $oTimer->stop();
+
+            if (self::$aDisabled['dt']) {
+                self::justAddContext($aContext);
+                return;
+            }
+
             self::d($oTimer->label(), $aContext);
         }
 
