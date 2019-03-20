@@ -11,7 +11,7 @@
     ],
     "config": {
         "platform": {
-            "php": "7.1"
+            "php": "7.2"
         },
         "sort-packages": true
     },
@@ -22,7 +22,7 @@
         }
     ],
     "require": {
-        "php": ">=7.1.0",
+        "php": ">=7.2",
         "ext-json": "*",
         "adbario/php-dot-notation": "^2.2",
         "monolog/monolog": "^1.21",
