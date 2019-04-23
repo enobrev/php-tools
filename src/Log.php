@@ -166,6 +166,13 @@
             self::$aSettings[self::getCurrentRequestHash()]['name'] = $sPurpose;
         }
 
+        /**
+         * @return bool
+         */
+        public static function hasPurpose(): bool {
+            return !empty(self::$aSettings[self::getCurrentRequestHash()]['name']);
+        }
+
         private static function incrementCurrentIndex(): void {
             $iSpans = count(self::$aSpans);
             if ($iSpans <= 0) {
