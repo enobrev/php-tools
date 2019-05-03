@@ -1,4 +1,6 @@
 <?php
+    /** @noinspection SummerTimeUnsafeTimeManipulationInspection */
+
     namespace Enobrev;
 
     use DateTime;
@@ -13,6 +15,12 @@
         return DateTime::createFromFormat('U.u', number_format(microtime(true), 6, '.', ''));
     }
 
+    /**
+     * @param DateTime $oFrom
+     * @param DateTime $oTo
+     *
+     * @return int
+     */
     function minutes(DateTime $oFrom, DateTime $oTo):int {
         $oDiff  = $oFrom->diff($oTo);
         $iDiff  = $oDiff->d * 24 * 60;
@@ -26,6 +34,12 @@
         return $iDiff;
     }
 
+    /**
+     * @param DateTime $oFrom
+     * @param DateTime $oTo
+     *
+     * @return string
+     */
     function minutes_ago(DateTime $oFrom, DateTime $oTo) {
         $oDiff  = $oFrom->diff($oTo);
         $iDiff  = $oDiff->d * 24 * 60;
