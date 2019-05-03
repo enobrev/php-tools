@@ -185,11 +185,11 @@
             self::$bJSONLogs = true;
         }
 
-        public static function disableD($bDisabled = true): void {
+        public static function disableD(bool $bDisabled = true): void {
             self::$aDisabled['d'] = $bDisabled;
         }
 
-        public static function disableDT($bDisabled = true): void {
+        public static function disableDT(bool $bDisabled = true): void {
             self::$aDisabled['dt'] = $bDisabled;
         }
 
@@ -312,9 +312,9 @@
         /**
          * @param string $sLabel
          *
-         * @return float
+         * @return float|null
          */
-        public static function stopTimer(string $sLabel): float {
+        public static function stopTimer(string $sLabel): ?float {
             return self::$aSpanMetas[self::getCurrentRequestHash()]->Timer->stop($sLabel);
         }
 
@@ -363,13 +363,13 @@
 
             if (self::$oServerRequest) {
                 $aGetParams = self::$oServerRequest->getQueryParams();
-                if ($aGetParams && isset($aGetParams['--t'])) {
+                if ($aGetParams && is_array($aGetParams) && isset($aGetParams['--t'])) {
                     self::$sThreadHash = $aGetParams['--t'];
                     return self::$sThreadHash;
                 }
 
                 $aPostParams = self::$oServerRequest->getParsedBody();
-                if ($aPostParams && isset($aPostParams['--t'])) {
+                if ($aPostParams && is_array($aPostParams) && isset($aPostParams['--t'])) {
                     self::$sThreadHash = $aPostParams['--t'];
                     return self::$sThreadHash;
                 }
@@ -413,7 +413,10 @@
             return self::$sThreadHash;
         }
 
+        /** @var array */
         private static $aIndices    = [];
+
+        /** @var bool */
         private static $bJSONParsed = false;
 
         private static function parseJSONBodyForIndices(): void {
@@ -462,7 +465,7 @@
                 }
 
                 $aPostParams = self::$oServerRequest->getParsedBody();
-                if ($aPostParams && isset($aPostParams['--p'])) {
+                if ($aPostParams && is_array($aPostParams) && isset($aPostParams['--p'])) {
                     return $aPostParams['--p'];
                 }
 
