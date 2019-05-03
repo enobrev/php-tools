@@ -21,7 +21,7 @@
 
         if ($sTitle !== '') {
             if (is_object($aArgs[0])
-                ||  is_array($aArgs[0])) {
+            ||  is_array($aArgs[0])) {
                 _output($sTitle . '<br />');
             } else {
                 _output($sTitle);
