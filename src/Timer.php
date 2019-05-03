@@ -11,7 +11,7 @@
          * @param bool $bReturnTimers
          * @return array
          */
-        public function stats($bReturnTimers = false) {
+        public function stats($bReturnTimers = false): array {
             $aReturn = [];
 
             if (count($this->aTimers)) {
@@ -31,6 +31,8 @@
                             $aStats[] = $aTimerStats;
                         }
                     }
+                    /** @noinspection DisconnectedForeachInstructionInspection */
+                    unset($oTimer);
 
                     $aReturn[$sLabel] = [
                         'range'   => $iTotal,
@@ -49,9 +51,9 @@
 
         /**
          * @param string $sLabel
-         * @return TimeKeeper
+         * @return TimeKeeper|null
          */
-        public function &get(string $sLabel) {
+        public function &get(string $sLabel): ?TimeKeeper {
             if (!isset($this->aTimers[$sLabel])) {
                 return $this->start($sLabel);
             }
@@ -62,13 +64,15 @@
 
                 return $oTimer;
             }
+
+            return null;
         }
 
         /**
          * @param string $sLabel
          * @return TimeKeeper
          */
-        public function &start(string $sLabel) {
+        public function &start(string $sLabel): TimeKeeper {
             if (!isset($this->aTimers[$sLabel])) {
                 $this->aTimers[$sLabel] = [];
             }
@@ -85,10 +89,12 @@
          * @param string $sLabel
          * @return float|null
          */
-        public function stop(string $sLabel) {
+        public function stop(string $sLabel): ?float {
             $oTimeKeeper = &$this->get($sLabel);
             if ($oTimeKeeper) {
                 return $oTimeKeeper->stop();
             }
+
+            return null;
         }
     }

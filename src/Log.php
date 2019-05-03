@@ -11,10 +11,10 @@
 
     class Log {
         /** @var Monolog\Logger */
-        private static $oLog  = null;
+        private static $oLog;
 
         /** @var ServerRequestInterface */
-        private static $oServerRequest = null;
+        private static $oServerRequest;
 
         /** @var string */
         private static $sService = 'Enobrev_Logger_Replace_Me';
@@ -23,7 +23,7 @@
         private static $bJSONLogs = false;
 
         /** @var string */
-        private static $sThreadHash = null;
+        private static $sThreadHash;
 
         /** @var array  */
         private static $aSpans = [];
@@ -43,16 +43,16 @@
         /**
          * @return Monolog\Logger
          */
-        private static function initLogger() {
+        private static function initLogger(): \Monolog\Logger {
             if (self::$oLog === null) {
                 register_shutdown_function([self::class, 'summary']);
 
                 self::$oLog = new Monolog\Logger(self::$sService);
 
                 if (self::$bJSONLogs) {
-                    $oFormatter = new LineFormatter("@cee: %context%");
+                    $oFormatter = new LineFormatter('@cee: %context%');
                 } else {
-                    $oFormatter = new LineFormatter("%context%");
+                    $oFormatter = new LineFormatter('%context%');
                 }
 
                 $oSyslog = new SyslogHandler('API');
@@ -102,7 +102,7 @@
 
             if ($aContext && is_array($aContext) && count($aContext)) {
                 foreach ($aContext as $sKey => $mValue) {
-                    if (strncmp($sKey, "--", 2) === 0) {
+                    if (strncmp($sKey, '--', 2) === 0) {
                         if (!is_scalar($mValue)) {
                             $oLog->mergeRecursiveDistinct($sKey, $mValue);
                         } else {
@@ -111,7 +111,7 @@
                         unset($aContext[$sKey]);
                     }
 
-                    if (strncmp($sKey, "#", 1) === 0) {
+                    if (strncmp($sKey, '#', 1) === 0) {
                         $sStrippedKey = str_replace('#', '', $sKey);
                         $aContext[$sStrippedKey] = $mValue;
                         unset($aContext[$sKey]);
@@ -200,7 +200,7 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function d($sMessage, array $aContext = array()) {
+        public static function d($sMessage, array $aContext = array()): bool {
             if (self::$aDisabled['d']) {
                 self::justAddContext($aContext);
                 return false;
@@ -216,7 +216,7 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function i($sMessage, array $aContext = array()) {
+        public static function i($sMessage, array $aContext = array()): bool {
             return self::addRecord(Monolog\Logger::INFO, $sMessage, $aContext);
         }
 
@@ -227,7 +227,7 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function n($sMessage, array $aContext = array()) {
+        public static function n($sMessage, array $aContext = array()): bool {
             return self::addRecord(Monolog\Logger::NOTICE, $sMessage, $aContext);
         }
 
@@ -238,7 +238,7 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function w($sMessage, array $aContext = array()) {
+        public static function w($sMessage, array $aContext = array()): bool {
             return self::addRecord(Monolog\Logger::WARNING, $sMessage, $aContext);
         }
 
@@ -249,7 +249,7 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function e($sMessage, array $aContext = array()) {
+        public static function e($sMessage, array $aContext = array()): bool {
             return self::addRecord(Monolog\Logger::ERROR, $sMessage, $aContext);
         }
 
@@ -260,7 +260,7 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function c($sMessage, array $aContext = array()) {
+        public static function c($sMessage, array $aContext = array()): bool {
             return self::addRecord(Monolog\Logger::CRITICAL, $sMessage, $aContext);
         }
 
@@ -271,7 +271,7 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function a($sMessage, array $aContext = array()) {
+        public static function a($sMessage, array $aContext = array()): bool {
             return self::addRecord(Monolog\Logger::ALERT, $sMessage, $aContext);
         }
 
@@ -282,7 +282,7 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function em($sMessage, array $aContext = array()) {
+        public static function em($sMessage, array $aContext = array()): bool {
             return self::addRecord(Monolog\Logger::EMERGENCY, $sMessage, $aContext);
         }
 
@@ -416,7 +416,7 @@
         private static $aIndices    = [];
         private static $bJSONParsed = false;
 
-        private static function parseJSONBodyForIndices() {
+        private static function parseJSONBodyForIndices(): void {
             if (self::$bJSONParsed) {
                 return;
             }
@@ -478,11 +478,7 @@
                 }
             }
 
-            if (isset($_REQUEST['--p'])) {
-                return $_REQUEST['--p'];
-            }
-
-            return null;
+            return $_REQUEST['--p'] ?? null;
         }
 
         /**
@@ -520,7 +516,7 @@
 
             self::$aSpanMetas[$sRequestHash] = new SpanMeta($oStartTime);
 
-            if ($sThreadHash = Log::getThreadHash()) {
+            if ($sThreadHash = self::getThreadHash()) {
                 $aSpan['--t'] = $sThreadHash;
             }
 
@@ -571,10 +567,10 @@
     }
 
     class SpanMeta {
-        const TIMESTAMP_FORMAT = DATE_RFC3339_EXTENDED;
+        private const TIMESTAMP_FORMAT = DATE_RFC3339_EXTENDED;
 
         // const VERSION = 1: included tags, which were not used
-        const VERSION = 2;
+        private const VERSION = 2;
 
         /** @var string */
         private $sName;
@@ -611,7 +607,7 @@
             return !empty($this->sName);
         }
 
-        public function getMessage(string $sService) {
+        public function getMessage(string $sService): array {
             return [
                 '_format'         => 'SSFSpan.DashedTrace',
                 'version'         => self::VERSION,

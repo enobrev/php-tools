@@ -7,7 +7,7 @@
     use PHPUnit\Framework\TestCase;
  
     class MinuteTest extends TestCase {
-        public function testMinutes() {
+        public function testMinutes(): void {
             $oNow       = new DateTime();
             $oThen      = new DateTime('-10 minutes');
             $oLater     = new DateTime('+10 minutes');
@@ -23,7 +23,7 @@
             $this->assertEquals(1,      minutes($oNow,     $oLater1));
         }
 
-        public function testMinutesAgo() {
+        public function testMinutesAgo(): void {
             $oNow       = new DateTime();
             $oThen      = new DateTime('-10 minutes');
             $oLater     = new DateTime('+10 minutes');

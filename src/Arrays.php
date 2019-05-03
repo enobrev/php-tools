@@ -21,7 +21,9 @@
      */
     function array_is_multi(array $aArray):bool {
         foreach ($aArray as $mValue) {
-            if (is_array($mValue)) return true;
+            if (is_array($mValue)) {
+                return true;
+            }
         }
         return false;
     }
@@ -47,7 +49,7 @@
      * @return bool
      */
     function array_not_associative(array $aArray):bool {
-        if (count($aArray) == 0) {
+        if (count($aArray) === 0) {
             return true;
         }
 

@@ -8,7 +8,7 @@
     class DepluralizeTest extends TestCase {
         private $aWords;
         
-        public function setUp() {
+        public function setUp():void {
             $this->aWords = [
                 'addresses'   => 'address',
                 'cities'      => 'city',
@@ -25,13 +25,15 @@
             ];
         }
 
-        public function testDepluralize() {
+        public function testDepluralize(): void
+        {
             foreach($this->aWords as $sPlural => $sSingular) {
                 $this->assertEquals($sSingular, depluralize($sPlural));
             }
         }
 
-        public function testPluralize() {
+        public function testPluralize(): void
+        {
             foreach ($this->aWords as $sPlural => $sSingular) {
                 $this->assertEquals($sPlural, pluralize($sSingular));
             }

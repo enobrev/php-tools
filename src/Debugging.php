@@ -6,9 +6,7 @@
      */
     function _output(string $sMessage): void {
         if (isCli() || contentTypeIsNotHtml()) {
-            $sMessage = str_replace('<br />', "\n", $sMessage);
-            $sMessage = str_replace('<pre>',  '', $sMessage);
-            $sMessage = str_replace('</pre>', '', $sMessage);
+            $sMessage = str_replace(['<br />', '<pre>', '</pre>'], ["\n", '', ''], $sMessage);
         }
 
         echo $sMessage;
@@ -21,10 +19,10 @@
             $sTitle = array_shift($aArgs) . ': ';
         }
 
-        if (strlen($sTitle)) {
+        if ($sTitle !== '') {
             if (is_object($aArgs[0])
                 ||  is_array($aArgs[0])) {
-                _output($sTitle . "<br />");
+                _output($sTitle . '<br />');
             } else {
                 _output($sTitle);
             }
@@ -35,7 +33,7 @@
             ||  is_array($mArg)) {
                 _output('<pre>' . print_r($mArg, true) . '</pre>');
             } else {
-                _output($mArg . "<br />");
+                _output($mArg . '<br />');
             }
         }
     }
@@ -59,7 +57,7 @@
                 }
 
                 if (isset($oTrace['file'])) {
-                    $sResponse .= ': ' . str_replace(dirname(dirname(dirname(__FILE__))), '', $oTrace['file']);
+                    $sResponse .= ': ' . str_replace(dirname(__FILE__, 3), '', $oTrace['file']);
                 }
 
                 $sResponse .=  ': ' . $oTrace['function'];
@@ -68,9 +66,9 @@
 
             if ($bReturn) {
                 return $aResponse;
-            } else {
-                dbg($aResponse);
             }
+
+            dbg($aResponse);
         } else {
             foreach ($oBacktrace as &$oTrace) {
                 if (isset($oTrace['object'])) {
@@ -84,13 +82,15 @@
                             $mArg = '[ARRAY]';
                         }
                     }
+                    unset($mArg);
                 }
             }
+            unset($oTrace);
 
             if ($bReturn) {
                 return $oBacktrace;
-            } else {
-                dbg($oBacktrace);
             }
+
+            dbg($oBacktrace);
         }
     }
