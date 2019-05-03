@@ -1,6 +1,7 @@
 <?php
     namespace Enobrev;
 
+    use DateTime;
     use Adbar\Dot;
     use Monolog;
     use Monolog\Formatter\LineFormatter;
@@ -27,18 +28,17 @@
         /** @var array  */
         private static $aSpans = [];
 
-        /** @var array  */
-        private static $aSettings = [];
+        /** @var SpanMeta[] */
+        private static $aSpanMetas = [];
 
         /** @var  int */
         private static $iGlobalIndex = 0;
 
+        /** @var array  */
         private static $aDisabled = [
             'd'  => false,
             'dt' => false
         ];
-
-        const TIMESTAMP_FORMAT = DATE_RFC3339_EXTENDED;
 
         /**
          * @return Monolog\Logger
@@ -99,7 +99,6 @@
             ]);
 
             $sRequestHash  = self::getCurrentRequestHash();
-            $oLocalContext = new Dot(self::$aSettings[$sRequestHash]['context']);
 
             if ($aContext && is_array($aContext) && count($aContext)) {
                 foreach ($aContext as $sKey => $mValue) {
@@ -117,16 +116,16 @@
                         $aContext[$sStrippedKey] = $mValue;
                         unset($aContext[$sKey]);
 
-                        $oLocalContext->mergeRecursiveDistinct($sStrippedKey, $mValue);
+                        self::$aSpanMetas[$sRequestHash]->Context->mergeRecursiveDistinct($sStrippedKey, $mValue);
                     }
                 }
 
+                /** @noinspection NotOptimalIfConditionsInspection */
                 if (count($aContext)) {
                     $oLog->mergeRecursiveDistinct($sMessage, $aContext);
                 }
             }
 
-            self::$aSettings[$sRequestHash]['context'] = $oLocalContext->all();
             return $oLog->all();
         }
 
@@ -145,32 +144,24 @@
         }
 
         /**
-         * @param string $sTag
-         * @param mixed  $mValue
-         */
-        public static function addTag(string $sTag, $mValue): void {
-            self::$aSettings[self::getCurrentRequestHash()]['tags'][$sTag] = $mValue;
-        }
-
-        /**
          * @param bool $bIsError
          */
         public static function setProcessIsError(bool $bIsError): void {
-            self::$aSettings[self::getCurrentRequestHash()]['error'] = $bIsError;
+            self::$aSpanMetas[self::getCurrentRequestHash()]->setError($bIsError);
         }
 
         /**
          * @param string $sPurpose
          */
         public static function setPurpose(string $sPurpose): void {
-            self::$aSettings[self::getCurrentRequestHash()]['name'] = $sPurpose;
+            self::$aSpanMetas[self::getCurrentRequestHash()]->setName($sPurpose);
         }
 
         /**
          * @return bool
          */
         public static function hasPurpose(): bool {
-            return !empty(self::$aSettings[self::getCurrentRequestHash()]['name']);
+            return self::$aSpanMetas[self::getCurrentRequestHash()]->hasName();
         }
 
         private static function incrementCurrentIndex(): void {
@@ -188,10 +179,6 @@
 
         private static function getCurrentSpan(): array {
             return self::$aSpans[count(self::$aSpans) - 1];
-        }
-
-        private static function getCurrentSettings(): array {
-            return self::$aSettings[self::getCurrentRequestHash()];
         }
 
         public static function enableJSON(): void {
@@ -319,7 +306,7 @@
          * @return TimeKeeper
          */
         public static function startTimer(string $sLabel): TimeKeeper {
-            return self::$aSettings[self::getCurrentRequestHash()]['metrics']->start($sLabel);
+            return self::$aSpanMetas[self::getCurrentRequestHash()]->Timer->start($sLabel);
         }
 
         /**
@@ -328,7 +315,7 @@
          * @return float
          */
         public static function stopTimer(string $sLabel): float {
-            return self::$aSettings[self::getCurrentRequestHash()]['metrics']->stop($sLabel);
+            return self::$aSpanMetas[self::getCurrentRequestHash()]->Timer->stop($sLabel);
         }
 
         /**
@@ -349,13 +336,12 @@
          * Sets the Parent Hash to the current Hash, and then resets the Request Hash
          */
         public static function startChildRequest(): void {
-            $aContext  = [];
-            $aSettings = self::getCurrentSettings();
-            if (isset($aSettings['context']['user'])) {
-                $aContext['user'] = $aSettings['context']['user'];
+            $aUser  = [];
+            if (self::$aSpanMetas[self::getCurrentRequestHash()]->Context->has('user')) {
+                $aUser = self::$aSpanMetas[self::getCurrentRequestHash()]->Context->get('user');
             }
 
-            self::initSpan(self::$oServerRequest, $aContext);
+            self::initSpan(self::$oServerRequest, $aUser);
         }
 
         /**
@@ -410,7 +396,7 @@
                 $aServerParams = self::$oServerRequest->getServerParams();
                 if ($aServerParams && isset($aServerParams['NGINX_REQUEST_ID'])) {
                     // NGINX Request ID should be last because that should always be set, but
-                    // We prefer to use any thread hash sent in from another proces
+                    // We prefer to use any thread hash sent in from another process
                     self::$sThreadHash = $aServerParams['NGINX_REQUEST_ID'];
                     return self::$sThreadHash;
                 }
@@ -418,7 +404,7 @@
 
             if (isset($_SERVER['NGINX_REQUEST_ID'])) {
                 // NGINX Request ID should be last because that should always be set, but
-                // We prefer to use any thread hash sent in from another proces
+                // We prefer to use any thread hash sent in from another process
                 self::$sThreadHash = $_SERVER['NGINX_REQUEST_ID'];
                 return self::$sThreadHash;
             }
@@ -501,9 +487,9 @@
 
         /**
          * @param ServerRequestInterface $oRequest
-         * @param array $aContext
+         * @param array $aUser
          */
-        public static function initSpan(ServerRequestInterface $oRequest, array $aContext = []): void {
+        public static function initSpan(ServerRequestInterface $oRequest, array $aUser = []): void {
             self::$oServerRequest = $oRequest;
 
             $oStartTime          = notNowButRightNow();
@@ -518,7 +504,7 @@
             if (isset($aServerParams['REQUEST_URI']))     { $aRequestDetails['uri']        = $aServerParams['REQUEST_URI'];      }
             if (isset($aServerParams['HTTP_HOST']))       { $aRequestDetails['host']       = $aServerParams['HTTP_HOST'];        }
             if (isset($aServerParams['HTTP_USER_AGENT'])) { $aRequestDetails['agent']      = $aServerParams['HTTP_USER_AGENT'];  }
-            if ($sIP != 'unknown')                        { $aRequestDetails['ip']         = $sIP;                               }
+            if ($sIP !== 'unknown')                        { $aRequestDetails['ip']         = $sIP;                               }
 
             /*
                 $aPath        = array_column(self::$aSpans, '--r');
@@ -532,14 +518,7 @@
                 '--r'      => $sRequestHash
             ];
 
-            self::$aSettings[$sRequestHash] = [
-                'name'            => '',
-                'start_timestamp' => $oStartTime->format(self::TIMESTAMP_FORMAT),
-                'error'           => false,
-                'tags'            => [],
-                'context'         => $aContext,
-                'metrics'         => new Timer()
-            ];
+            self::$aSpanMetas[$sRequestHash] = new SpanMeta($oStartTime);
 
             if ($sThreadHash = Log::getThreadHash()) {
                 $aSpan['--t'] = $sThreadHash;
@@ -551,8 +530,6 @@
                 $aSpan['--p'] = $sParentHash;
             }
 
-            $aUser = [];
-
             if ($sIP) {
                 $aUser['ip'] = $sIP;
             }
@@ -562,7 +539,7 @@
             }
 
             if (count($aUser)) {
-                self::$aSettings[$sRequestHash]['context']['user'] = isset(self::$aSettings[$sRequestHash]['context']['user']) ? array_merge(self::$aSettings[$sRequestHash]['context']['user'], $aUser) : $aUser;
+                self::$aSpanMetas[$sRequestHash]->Context->mergeRecursiveDistinct(['user' => $aUser]);
             }
 
             self::$aSpans[] = $aSpan;
@@ -576,31 +553,76 @@
          */
         public static function summary(string $sOverrideName = 'Summary'): void {
             self::incrementCurrentIndex();
-            $iTimer    = self::stopTimer('_REQUEST');
-            $aSettings = self::getCurrentSettings();
-            $aSettings['metrics'] = json_encode($aSettings['metrics']->stats());
-            
+            $iTimer   = self::stopTimer('_REQUEST');
             $aMessage = array_merge(
                 self::prepareContext(
                     self::$sService . '.' . $sOverrideName,
                     [
-                        '--ms'            => $iTimer,
-                        '--summary'       => true,
-                        '--span' => array_merge(
-                            [
-                                '_format'         => 'SSFSpan.DashedTrace',
-                                'version'         => 1,
-                                'end_timestamp'   => notNowButRightNow()->format(self::TIMESTAMP_FORMAT),
-                                'service'         => self::$sService
-                            ],
-                            $aSettings
-                        )
+                        '--ms'      => $iTimer,
+                        '--summary' => true,
+                        '--span'    => self::$aSpanMetas[self::getCurrentRequestHash()]->getMessage(self::$sService)
                     ]
                 ),
                 self::getCurrentSpan()
             );
 
             self::initLogger()->addRecord(Monolog\Logger::INFO, $aMessage['--action'], $aMessage);
+        }
+    }
+
+    class SpanMeta {
+        const TIMESTAMP_FORMAT = DATE_RFC3339_EXTENDED;
+
+        // const VERSION = 1: included tags, which were not used
+        const VERSION = 2;
+
+        /** @var string */
+        private $sName;
+
+        /** @var DateTime */
+        private $oStart;
+
+        /** @var bool */
+        private $bError;
+
+        /** @var Dot */
+        public $Context;
+
+        /** @var Timer */
+        public $Timer;
+
+        public function __construct(DateTime $oStart) {
+            $this->sName   = '';
+            $this->oStart  = $oStart;
+            $this->bError  = false;
+            $this->Context = new Dot();
+            $this->Timer   = new Timer();
+        }
+
+        public function setName(string $sName):void {
+            $this->sName = $sName;
+        }
+
+        public function setError(bool $bError):void {
+            $this->bError = $bError;
+        }
+
+        public function hasName():bool {
+            return !empty($this->sName);
+        }
+
+        public function getMessage(string $sService) {
+            return [
+                '_format'         => 'SSFSpan.DashedTrace',
+                'version'         => self::VERSION,
+                'service'         => $sService,
+                'name'            => $this->sName,
+                'start_timestamp' => $this->oStart->format(self::TIMESTAMP_FORMAT),
+                'end_timestamp'   => notNowButRightNow()->format(self::TIMESTAMP_FORMAT),
+                'error'           => $this->bError,
+                'context'         => $this->Context->all(),
+                'metrics'         => json_encode($this->Timer->stats())
+            ];
         }
     }
 
