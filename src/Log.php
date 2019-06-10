@@ -2,6 +2,7 @@
     namespace Enobrev;
 
     use DateTime;
+    use Exception;
     use Adbar\Dot;
     use Monolog;
     use Monolog\Formatter\LineFormatter;
@@ -250,6 +251,20 @@
          * @return boolean Whether the record has been processed
          */
         public static function e($sMessage, array $aContext = array()): bool {
+            return self::addRecord(Monolog\Logger::ERROR, $sMessage, $aContext);
+        }
+
+        /**
+         * Adds a log record at the ERROR level.
+         *
+         * @param  string  $sMessage The log message
+         * @param  Exception $oException The exception
+         * @param  array   $aContext The log context
+         * @return boolean Whether the record has been processed
+         */
+        public static function ex($sMessage, Exception $oException, array $aContext = array()): bool {
+            $aContext['--exception'] = $oException;
+
             return self::addRecord(Monolog\Logger::ERROR, $sMessage, $aContext);
         }
 
