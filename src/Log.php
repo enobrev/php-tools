@@ -20,6 +20,9 @@
         /** @var string */
         private static $sService = 'Enobrev_Logger_Replace_Me';
 
+        /** @var int */
+        private static $iStackLimit = 5;
+
         /** @var bool */
         private static $bJSONLogs = false;
 
@@ -186,6 +189,10 @@
             self::$bJSONLogs = true;
         }
 
+        public static function setStackLimit(int $iStackLimit): void {
+            self::$iStackLimit = $iStackLimit;
+        }
+
         public static function disableD(bool $bDisabled = true): void {
             self::$aDisabled['d'] = $bDisabled;
         }
@@ -263,10 +270,16 @@
          * @return boolean Whether the record has been processed
          */
         public static function ex($sMessage, Exception $oException, array $aContext = array()): bool {
-            $aStack = $oException->getTrace();
+            $iTruncate  = self::$iStackLimit;
+            $aStack     = $oException->getTrace();
+            $iStack     = count($aStack);
 
-            if (count($aStack) > 5) {
+            if ($iStack > $iTruncate) {
+                $iRemaining = $iStack - $iTruncate;
                 $aStack = array_slice($aStack, 0, 5);
+                $aStack[] = [
+                    "__TRUNCATED__" => "$iRemaining entries cut from $iStack stack entries for brevity"
+                ];
             }
 
             foreach($aStack as &$aItem) {
