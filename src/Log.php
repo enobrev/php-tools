@@ -263,16 +263,45 @@
          * @return boolean Whether the record has been processed
          */
         public static function ex($sMessage, Exception $oException, array $aContext = array()): bool {
+            $aStack = $oException->getTrace();
+
+            if (count($aStack) > 5) {
+                $aStack = array_slice($aStack, 0, 5);
+            }
+
+            foreach($aStack as &$aItem) {
+                if (isset($aItem['args'])) {
+                    $aItem['args'] = self::replaceObjects($aItem['args']);
+                }
+            }
+            unset($aItem);
+
             $aContext['--exception'] = [
                 'type'    => get_class($oException),
                 'code'    => $oException->getCode(),
                 'message' => $oException->getMessage(),
                 'file'    => $oException->getFile(),
                 'line'    => $oException->getLine(),
-                'stack'   => json_encode($oException->getTrace())
+                'stack'   => json_encode($aStack)
             ];
 
             return self::addRecord(Monolog\Logger::ERROR, $sMessage, $aContext);
+        }
+
+        private static function replaceObjects(array $aArgs) {
+            foreach($aArgs as &$aArg) {
+                if (is_object($aArg)) {
+                    $aArg = 'Object: '. get_class($aArg);
+                } else if (is_array($aArg)) {
+                    if (count($aArg) === 0) {
+                        $aArg = 'Empty Array';
+                    } else {
+                        $aArg = self::replaceObjects($aArg);
+                    }
+                }
+            }
+
+            return $aArgs;
         }
 
         /**
