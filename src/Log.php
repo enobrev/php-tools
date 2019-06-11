@@ -263,7 +263,14 @@
          * @return boolean Whether the record has been processed
          */
         public static function ex($sMessage, Exception $oException, array $aContext = array()): bool {
-            $aContext['--exception'] = $oException;
+            $aContext['--exception'] = [
+                'type'    => get_class($oException),
+                'code'    => $oException->getCode(),
+                'message' => $oException->getMessage(),
+                'file'    => $oException->getFile(),
+                'line'    => $oException->getLine(),
+                'stack'   => explode("\n", $oException->getTraceAsString())
+            ];
 
             return self::addRecord(Monolog\Logger::ERROR, $sMessage, $aContext);
         }
