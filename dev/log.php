@@ -12,6 +12,7 @@
     Log::w('Warning!', ['context' => 'whatever']);
     Log::setProcessIsError(true);
     Log::e('Error!', ['context' => 'whatever']);
+    Log::ex('Error!', new \Exception('Error!'), ['context' => 'whatever']);
     Log::c('Critical!', ['context' => 'whatever']);
     Log::dt($oTimer);
     Log::summary();
