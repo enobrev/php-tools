@@ -269,7 +269,7 @@
                 'message' => $oException->getMessage(),
                 'file'    => $oException->getFile(),
                 'line'    => $oException->getLine(),
-                'stack'   => explode("\n", $oException->getTraceAsString())
+                'stack'   => json_encode($oException->getTrace())
             ];
 
             return self::addRecord(Monolog\Logger::ERROR, $sMessage, $aContext);
