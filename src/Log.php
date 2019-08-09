@@ -282,12 +282,13 @@
                 ];
             }
 
-            foreach($aStack as &$aItem) {
+            $aStackCopy = [];
+            foreach($aStack as $aItem) { // Do NOT use a reference here as getTrace returns references to the actual args in the call stack which can then modify the real vars in the stack
                 if (isset($aItem['args'])) {
                     $aItem['args'] = self::replaceObjects($aItem['args']);
                 }
+                $aStackCopy[] = $aItem;
             }
-            unset($aItem);
 
             $aContext['--exception'] = [
                 'type'    => get_class($oException),
@@ -295,26 +296,27 @@
                 'message' => $oException->getMessage(),
                 'file'    => $oException->getFile(),
                 'line'    => $oException->getLine(),
-                'stack'   => json_encode($aStack)
+                'stack'   => json_encode($aStackCopy)
             ];
 
             return self::addRecord(Monolog\Logger::ERROR, $sMessage, $aContext);
         }
 
         private static function replaceObjects(array $aArgs) {
-            foreach($aArgs as &$aArg) {
+            $aOutput = [];
+            foreach($aArgs as $sKey => $aArg) {  // Do NOT use a reference here as getTrace returns references to the actual args in the call stack which can then modify the real vars in the stack
                 if (is_object($aArg)) {
-                    $aArg = 'Object: '. get_class($aArg);
+                    $aOutput[$sKey] = 'Object: '. get_class($aArg);
                 } else if (is_array($aArg)) {
                     if (count($aArg) === 0) {
-                        $aArg = 'Empty Array';
+                        $aOutput[$sKey] = 'Empty Array';
                     } else {
-                        $aArg = self::replaceObjects($aArg);
+                        $aOutput[$sKey] = self::replaceObjects($aArg);
                     }
                 }
             }
 
-            return $aArgs;
+            return $aOutput;
         }
 
         /**
