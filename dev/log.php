@@ -10,7 +10,7 @@
     Log::i('Info!', ['context' => 'whatever']);
     Log::n('Notice!', ['context' => 'whatever']);
     Log::w('Warning!', ['context' => 'whatever']);
-    Log::d('Debug.HashTag', ['#hashtag' => 'whatever']);
+    Log::d('Debug.HashTag', ['#hashtag' => 'whatever', 'not_hashtag' => 'wherever']);
     Log::setProcessIsError(true);
     Log::e('Error!', ['context' => 'whatever']);
     Log::ex('Error!', new \Exception('Error!'), ['context' => 'whatever']);
