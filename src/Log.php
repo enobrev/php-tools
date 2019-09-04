@@ -116,6 +116,7 @@
                     }
 
                     if (strncmp($sKey, '#', 1) === 0) {
+                        $oLog->mergeRecursiveDistinct($sKey, $mValue);
                         $sStrippedKey = str_replace('#', '', $sKey);
                         $aContext[$sStrippedKey] = $mValue;
                         unset($aContext[$sKey]);
