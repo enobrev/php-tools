@@ -299,6 +299,10 @@
                 'stack'   => json_encode($aStackCopy)
             ];
 
+            $aContext['--span'] = [
+                'context' => self::getContextForOutput()
+            ];
+
             return self::addRecord(Monolog\Logger::ERROR, $sMessage, $aContext);
         }
 
@@ -635,7 +639,7 @@
         }
 
         public static function getContextForOutput() {
-            return self::$aSpanMetas[self::getCurrentRequestHash()]->getMessage(self::$sService);
+            return self::$aSpanMetas[self::getCurrentRequestHash()]->Context->all();
         }
     }
 
