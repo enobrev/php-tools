@@ -633,6 +633,10 @@
 
             self::initLogger()->addRecord(Monolog\Logger::INFO, $aMessage['--action'], $aMessage);
         }
+
+        public static function getContextForOutput() {
+            return self::getCurrentSpan();
+        }
     }
 
     class SpanMeta {
