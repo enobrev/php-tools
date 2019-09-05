@@ -635,7 +635,7 @@
         }
 
         public static function getContextForOutput() {
-            return self::getCurrentSpan();
+            return self::$aSpanMetas[self::getCurrentRequestHash()]->getMessage(self::$sService);
         }
     }
 
