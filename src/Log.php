@@ -8,7 +8,7 @@
     use Monolog\Formatter\LineFormatter;
     use Monolog\Handler\SyslogHandler;
     use Psr\Http\Message\ServerRequestInterface;
-    use Zend\Diactoros\ServerRequestFactory;
+    use Laminas\Diactoros\ServerRequestFactory;
 
     class Log {
         /** @var Monolog\Logger */
