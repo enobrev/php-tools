@@ -1,7 +1,6 @@
 <?php
     namespace Enobrev;
 
-    use DateTime;
     use Exception;
     use Adbar\Dot;
     use Monolog;
@@ -22,6 +21,9 @@
 
         /** @var int */
         private static $iStackLimit = 5;
+
+        /** @var bool */
+        private static $bMetrics = false;
 
         /** @var bool */
         private static $bJSONLogs = false;
@@ -138,6 +140,13 @@
          */
         public static function setService(string $sService): void {
             self::$sService = $sService;
+        }
+
+        /**
+         * @param bool $bMetrics
+         */
+        public static function enableMetrics(bool $bMetrics): void {
+            self::$bMetrics = $bMetrics;
         }
 
         /**
@@ -587,7 +596,7 @@
                 '--r'      => $sRequestHash
             ];
 
-            self::$aSpanMetas[$sRequestHash] = new SpanMeta($oStartTime);
+            self::$aSpanMetas[$sRequestHash] = new SpanMeta($oStartTime, self::$bMetrics ? SpanMeta::METRICS_ON : SpanMeta::METRICS_OFF);
 
             if ($sThreadHash = self::getThreadHash()) {
                 $aSpan['--t'] = $sThreadHash;
@@ -640,62 +649,6 @@
 
         public static function getContextForOutput() {
             return self::$aSpanMetas[self::getCurrentRequestHash()]->Context->all();
-        }
-    }
-
-    class SpanMeta {
-        private const TIMESTAMP_FORMAT = DATE_RFC3339_EXTENDED;
-
-        // const VERSION = 1: included tags, which were not used
-        private const VERSION = 2;
-
-        /** @var string */
-        private $sName;
-
-        /** @var DateTime */
-        private $oStart;
-
-        /** @var bool */
-        private $bError;
-
-        /** @var Dot */
-        public $Context;
-
-        /** @var Timer */
-        public $Timer;
-
-        public function __construct(DateTime $oStart) {
-            $this->sName   = '';
-            $this->oStart  = $oStart;
-            $this->bError  = false;
-            $this->Context = new Dot();
-            $this->Timer   = new Timer();
-        }
-
-        public function setName(string $sName):void {
-            $this->sName = $sName;
-        }
-
-        public function setError(bool $bError):void {
-            $this->bError = $bError;
-        }
-
-        public function hasName():bool {
-            return !empty($this->sName);
-        }
-
-        public function getMessage(string $sService): array {
-            return [
-                '_format'         => 'SSFSpan.DashedTrace',
-                'version'         => self::VERSION,
-                'service'         => $sService,
-                'name'            => $this->sName,
-                'start_timestamp' => $this->oStart->format(self::TIMESTAMP_FORMAT),
-                'end_timestamp'   => notNowButRightNow()->format(self::TIMESTAMP_FORMAT),
-                'error'           => $this->bError,
-                'context'         => $this->Context->all(),
-                'metrics'         => json_encode($this->Timer->stats())
-            ];
         }
     }
 
