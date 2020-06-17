@@ -60,9 +60,12 @@
     }
 
     // https://stackoverflow.com/a/4763921/14651
-    function formatSeconds( float $nSeconds ): string {
+    function formatSeconds( float $nSeconds , int $iMSPlaces = 0): string {
         $iHours = 0;
-        $sMS = str_replace( "0.", '', $nSeconds - floor( $nSeconds ) );
+
+        $nMS = $nSeconds - floor( $nSeconds );
+        $nMSRounded = $iMSPlaces ? round($nMS, $iMSPlaces) : $nMS;
+        $sMS = str_replace( "0.", '', $nMSRounded );
 
         if ( $nSeconds > 3600 )
         {
@@ -70,13 +73,12 @@
         }
         $nSeconds %= 3600;
 
-
         return str_pad( $iHours, 2, '0', STR_PAD_LEFT )
                . gmdate( ':i:s', $nSeconds )
                . ($sMS ? ".$sMS" : '')
             ;
     }
 
-    function formatMilliseconds( float $nMS ): string {
-        return formatSeconds($nMS / 1000);
+    function formatMilliseconds( float $nMS , int $iMSPlaces = 0 ): string {
+        return formatSeconds($nMS / 1000, $iMSPlaces);
     }
