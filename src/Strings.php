@@ -1,12 +1,14 @@
 <?php
     namespace Enobrev;
 
+    use ICanBoogie\Inflector;
+
     /**
      * @param string $sWord
      * @return string
      */
     function depluralize(string $sWord) : string {
-        return Inflect::singularize($sWord);
+        return Inflector::get()->singularize($sWord);
     }
 
     /**
@@ -14,5 +16,5 @@
      * @return string
      */
     function pluralize(string $sWord): string {
-        return Inflect::pluralize($sWord);
+        return Inflector::get()->pluralize($sWord);
     }

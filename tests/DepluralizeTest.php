@@ -17,7 +17,7 @@
                 'geese'       => 'goose',
                 'languages'   => 'language',
                 'media'       => 'medium',
-                'mooses'      => 'moose',
+                'moose'       => 'moose',
                 'prices'      => 'price',
                 'processings' => 'processing',
                 'states'      => 'state',
