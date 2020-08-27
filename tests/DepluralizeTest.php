@@ -13,6 +13,7 @@
                 'addresses'   => 'address',
                 'cities'      => 'city',
                 'data'        => 'datum',
+                'betas'       => 'beta',
                 'fish'        => 'fish',
                 'geese'       => 'goose',
                 'languages'   => 'language',
