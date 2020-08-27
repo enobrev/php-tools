@@ -22,8 +22,12 @@
                          ->withSingularRules(
                              new Ruleset(
                                  new Transformations(),
-                                 new Patterns(),
-                                 new Substitutions(new Substitution(new Word('data'), new Word('datum')))
+                                 new Patterns(
+                                     new Pattern('beta')
+                                 ),
+                                 new Substitutions(
+                                     new Substitution(new Word('data'), new Word('datum'))
+                                 )
                              )
                          )
                          ->build();
@@ -36,6 +40,16 @@
      */
     function pluralize(string $sWord): string {
         // https://www.doctrine-project.org/projects/doctrine-inflector/en/2.0/index.html
-        $oInflector = InflectorFactory::create()->build();
+        $oInflector = InflectorFactory::create()
+                          ->withPluralRules(
+                              new Ruleset(
+                                  new Transformations(),
+                                  new Patterns(
+                                      new Pattern('geese')
+                                  ),
+                                  new Substitutions()
+                              )
+                          )
+                          ->build();
         return $oInflector->pluralize($sWord);
     }

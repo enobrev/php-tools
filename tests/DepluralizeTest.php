@@ -26,18 +26,17 @@
             ];
         }
 
-        public function testDepluralize(): void
-        {
+        public function testDepluralize(): void {
             foreach($this->aWords as $sPlural => $sSingular) {
-                $this->assertEquals($sSingular, depluralize($sPlural));
+                self::assertEquals($sSingular, depluralize($sPlural));
+                self::assertEquals($sSingular, depluralize($sSingular));
             }
         }
 
-        public function testPluralize(): void
-        {
+        public function testPluralize(): void {
             foreach ($this->aWords as $sPlural => $sSingular) {
-                $this->assertEquals($sPlural, pluralize($sSingular));
+                self::assertEquals($sPlural, pluralize($sSingular));
+                self::assertEquals($sPlural, pluralize($sPlural));
             }
         }
-
     }
