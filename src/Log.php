@@ -2,6 +2,8 @@
     namespace Enobrev;
 
     use Exception;
+    use Throwable;
+
     use Adbar\Dot;
     use Monolog;
     use Monolog\Formatter\LineFormatter;
@@ -273,15 +275,16 @@
         /**
          * Adds a log record at the ERROR level.
          *
-         * @param  string  $sMessage The log message
-         * @param  Exception $oException The exception
-         * @param  array   $aContext The log context
+         * @param  string    $sMessage   The log message
+         * @param  Exception $oThrowable The exception
+         * @param  array     $aContext   The log context
+         *
          * @return boolean Whether the record has been processed
          */
-        public static function ex($sMessage, Exception $oException, array $aContext = array()): bool {
-            $iTruncate  = self::$iStackLimit;
-            $aStack     = $oException->getTrace();
-            $iStack     = count($aStack);
+        public static function ex($sMessage, Throwable $oThrowable, array $aContext = array()): bool {
+            $iTruncate = self::$iStackLimit;
+            $aStack    = $oThrowable->getTrace();
+            $iStack    = count($aStack);
 
             if ($iStack > $iTruncate) {
                 $iRemaining = $iStack - $iTruncate;
@@ -300,11 +303,11 @@
             }
 
             $aContext['--exception'] = [
-                'type'    => get_class($oException),
-                'code'    => $oException->getCode(),
-                'message' => $oException->getMessage(),
-                'file'    => $oException->getFile(),
-                'line'    => $oException->getLine(),
+                'type'    => get_class($oThrowable),
+                'code'    => $oThrowable->getCode(),
+                'message' => $oThrowable->getMessage(),
+                'file'    => $oThrowable->getFile(),
+                'line'    => $oThrowable->getLine(),
                 'stack'   => json_encode($aStackCopy)
             ];
 
