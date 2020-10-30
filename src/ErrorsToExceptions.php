@@ -1,4 +1,8 @@
 <?php
+    /** @noinspection PhpMultipleClassesDeclarationsInOneFile */
+    /** @noinspection PhpIllegalPsrClassPathInspection */
+    /** @noinspection PhpUnhandledExceptionInspection */
+
     namespace Enobrev;
 
     use ErrorException;
@@ -13,21 +17,21 @@
         if (0 === error_reporting()) { return; }
         switch($err_severity)
         {
-            case E_ERROR:               throw new ErrorException            ($err_msg, 0, $err_severity, $err_file, $err_line);
-            case E_WARNING:             throw new WarningException          ($err_msg, 0, $err_severity, $err_file, $err_line);
-            case E_PARSE:               throw new ParseException            ($err_msg, 0, $err_severity, $err_file, $err_line);
-            case E_NOTICE:              throw new NoticeException           ($err_msg, 0, $err_severity, $err_file, $err_line);
-            case E_CORE_ERROR:          throw new CoreErrorException        ($err_msg, 0, $err_severity, $err_file, $err_line);
-            case E_CORE_WARNING:        throw new CoreWarningException      ($err_msg, 0, $err_severity, $err_file, $err_line);
-            case E_COMPILE_ERROR:       throw new CompileErrorException     ($err_msg, 0, $err_severity, $err_file, $err_line);
-            case E_COMPILE_WARNING:     throw new CoreWarningException      ($err_msg, 0, $err_severity, $err_file, $err_line);
-            case E_USER_ERROR:          throw new UserErrorException        ($err_msg, 0, $err_severity, $err_file, $err_line);
-            case E_USER_WARNING:        throw new UserWarningException      ($err_msg, 0, $err_severity, $err_file, $err_line);
-            case E_USER_NOTICE:         throw new UserNoticeException       ($err_msg, 0, $err_severity, $err_file, $err_line);
-            case E_STRICT:              throw new StrictException           ($err_msg, 0, $err_severity, $err_file, $err_line);
-            case E_RECOVERABLE_ERROR:   throw new RecoverableErrorException ($err_msg, 0, $err_severity, $err_file, $err_line);
-            case E_DEPRECATED:          throw new DeprecatedException       ($err_msg, 0, $err_severity, $err_file, $err_line);
-            case E_USER_DEPRECATED:     throw new UserDeprecatedException   ($err_msg, 0, $err_severity, $err_file, $err_line);
+            case E_ERROR:               throw new ErrorException            ($err_msg, E_ERROR,             $err_severity, $err_file, $err_line);
+            case E_WARNING:             throw new WarningException          ($err_msg, E_WARNING,           $err_severity, $err_file, $err_line);
+            case E_PARSE:               throw new ParseException            ($err_msg, E_PARSE,             $err_severity, $err_file, $err_line);
+            case E_NOTICE:              throw new NoticeException           ($err_msg, E_NOTICE,            $err_severity, $err_file, $err_line);
+            case E_CORE_ERROR:          throw new CoreErrorException        ($err_msg, E_CORE_ERROR,        $err_severity, $err_file, $err_line);
+            case E_CORE_WARNING:        throw new CoreWarningException      ($err_msg, E_CORE_WARNING,      $err_severity, $err_file, $err_line);
+            case E_COMPILE_ERROR:       throw new CompileErrorException     ($err_msg, E_COMPILE_ERROR,     $err_severity, $err_file, $err_line);
+            case E_COMPILE_WARNING:     throw new CoreWarningException      ($err_msg, E_COMPILE_WARNING,   $err_severity, $err_file, $err_line);
+            case E_USER_ERROR:          throw new UserErrorException        ($err_msg, E_USER_ERROR,        $err_severity, $err_file, $err_line);
+            case E_USER_WARNING:        throw new UserWarningException      ($err_msg, E_USER_WARNING,      $err_severity, $err_file, $err_line);
+            case E_USER_NOTICE:         throw new UserNoticeException       ($err_msg, E_USER_NOTICE,       $err_severity, $err_file, $err_line);
+            case E_STRICT:              throw new StrictException           ($err_msg, E_STRICT,            $err_severity, $err_file, $err_line);
+            case E_RECOVERABLE_ERROR:   throw new RecoverableErrorException ($err_msg, E_RECOVERABLE_ERROR, $err_severity, $err_file, $err_line);
+            case E_DEPRECATED:          throw new DeprecatedException       ($err_msg, E_DEPRECATED,        $err_severity, $err_file, $err_line);
+            case E_USER_DEPRECATED:     throw new UserDeprecatedException   ($err_msg, E_USER_DEPRECATED,   $err_severity, $err_file, $err_line);
         }
     });
 

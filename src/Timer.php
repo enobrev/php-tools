@@ -5,7 +5,7 @@
         /**
          * @var TimeKeeper[][]
          */
-        private $aTimers = [];
+        private array $aTimers = [];
 
         /**
          * @param bool $bReturnTimers
@@ -58,14 +58,13 @@
                 return $this->start($sLabel);
             }
 
+            $oTimer  = null;
             $iTimers = count($this->aTimers[$sLabel]);
             if ($iTimers > 0) {
                 $oTimer = &$this->aTimers[$sLabel][$iTimers - 1];
-
-                return $oTimer;
             }
 
-            return null;
+            return $oTimer;
         }
 
         /**

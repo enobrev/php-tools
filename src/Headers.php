@@ -1,10 +1,7 @@
 <?php
     namespace Enobrev;
 
-    /**
-     * @return array
-     */
-    function getHeaders() {
+    function getHeaders(): array {
         $aHeaders = [];
         foreach ($_SERVER as $sName => $sValue) {
             if (strpos($sName, 'HTTP_') === 0) {
@@ -14,17 +11,13 @@
         return $aHeaders;
     }
 
-    /**
-     * @return bool
-     */
-    function isCli() {
+    function isCli(): bool {
         return PHP_SAPI === 'cli'
             && empty($_SERVER['REMOTE_ADDR']);
     }
 
     /**
      * @return string
-     * @psalm-suppress PossiblyFalseArgument
      */
     function get_ip() {
         $bIsCLI = isCli();
@@ -51,10 +44,7 @@
         return $sIP;
     }
 
-    /**
-     * @return bool
-     */
-    function contentTypeIsNotHtml() {
+    function contentTypeIsNotHtml(): bool {
         $aHeaders = headers_list();
         if (count($aHeaders)) {
             foreach($aHeaders as $sHeader) {

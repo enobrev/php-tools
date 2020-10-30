@@ -2,20 +2,11 @@
     namespace Enobrev;
 
     class TimeKeeper {
-        /**
-         * @var string
-         */
-        private $sLabel;
+        private string $sLabel;
 
-        /**
-         * @var float
-         */
-        private $nStart;
+        private float $nStart;
 
-        /**
-         * @var float
-         */
-        private $nStop;
+        private float $nStop;
 
         /**
          * @param string $sLabel
@@ -23,7 +14,7 @@
         public function __construct(string $sLabel) {
             $this->sLabel = $sLabel;
             $this->nStart = 0;
-            $this->nStop = 0;
+            $this->nStop  = 0;
         }
 
         /**

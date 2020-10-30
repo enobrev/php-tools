@@ -15,23 +15,17 @@
         // const VERSION = 1: included tags, which were not used
         private const VERSION = 2;
 
-        /** @var string */
-        private $sName;
+        private string $sName;
 
-        /** @var bool */
-        private $bMetrics;
+        private bool $bMetrics;
 
-        /** @var DateTime */
-        private $oStart;
+        private DateTime $oStart;
 
-        /** @var bool */
-        private $bError;
+        private bool $bError;
 
-        /** @var Dot */
-        public $Context;
+        public Dot $Context;
 
-        /** @var Timer */
-        public $Timer;
+        public Timer $Timer;
 
         public function __construct(DateTime $oStart, $sMetrics = self::METRICS_OFF) {
             $this->sName    = '';

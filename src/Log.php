@@ -1,61 +1,50 @@
 <?php
     namespace Enobrev;
 
-    use Exception;
     use Throwable;
 
     use Adbar\Dot;
-    use Monolog;
+    use Laminas\Diactoros\ServerRequestFactory;
     use Monolog\Formatter\LineFormatter;
     use Monolog\Handler\SyslogHandler;
+    use Monolog\Logger;
     use Psr\Http\Message\ServerRequestInterface;
-    use Laminas\Diactoros\ServerRequestFactory;
 
     class Log {
-        /** @var Monolog\Logger */
-        private static $oLog;
+        private static ?Logger $oLog;
 
-        /** @var ServerRequestInterface */
-        private static $oServerRequest;
+        private static ServerRequestInterface $oServerRequest;
 
-        /** @var string */
-        private static $sService = 'Enobrev_Logger_Replace_Me';
+        private static string $sService = 'Enobrev_Logger_Replace_Me';
 
-        /** @var int */
-        private static $iStackLimit = 5;
+        private static int $iStackLimit = 5;
 
-        /** @var bool */
-        private static $bMetrics = false;
+        private static bool $bMetrics = false;
 
-        /** @var bool */
-        private static $bJSONLogs = false;
+        private static bool $bJSONLogs = false;
 
-        /** @var string */
-        private static $sThreadHash;
+        private static string $sThreadHash;
 
-        /** @var array  */
-        private static $aSpans = [];
+        private static array $aSpans = [];
 
         /** @var SpanMeta[] */
-        private static $aSpanMetas = [];
+        private static array $aSpanMetas = [];
 
-        /** @var  int */
-        private static $iGlobalIndex = 0;
+        private static int $iGlobalIndex = 0;
 
-        /** @var array  */
-        private static $aDisabled = [
+        private static array $aDisabled = [
             'd'  => false,
             'dt' => false
         ];
 
         /**
-         * @return Monolog\Logger
+         * @return Logger
          */
-        private static function initLogger(): \Monolog\Logger {
+        private static function initLogger(): Logger {
             if (self::$oLog === null) {
                 register_shutdown_function([self::class, 'summary']);
 
-                self::$oLog = new Monolog\Logger(self::$sService);
+                self::$oLog = new Logger(self::$sService);
 
                 if (self::$bJSONLogs) {
                     $oFormatter = new LineFormatter('@cee: %context%');
@@ -219,13 +208,13 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function d($sMessage, array $aContext = array()): bool {
+        public static function d(string $sMessage, array $aContext = array()): bool {
             if (self::$aDisabled['d']) {
                 self::justAddContext($aContext);
                 return false;
             }
 
-            return self::addRecord(Monolog\Logger::DEBUG, $sMessage, $aContext);
+            return self::addRecord(Logger::DEBUG, $sMessage, $aContext);
         }
 
         /**
@@ -235,8 +224,8 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function i($sMessage, array $aContext = array()): bool {
-            return self::addRecord(Monolog\Logger::INFO, $sMessage, $aContext);
+        public static function i(string $sMessage, array $aContext = array()): bool {
+            return self::addRecord(Logger::INFO, $sMessage, $aContext);
         }
 
         /**
@@ -246,8 +235,8 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function n($sMessage, array $aContext = array()): bool {
-            return self::addRecord(Monolog\Logger::NOTICE, $sMessage, $aContext);
+        public static function n(string $sMessage, array $aContext = array()): bool {
+            return self::addRecord(Logger::NOTICE, $sMessage, $aContext);
         }
 
         /**
@@ -257,8 +246,8 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function w($sMessage, array $aContext = array()): bool {
-            return self::addRecord(Monolog\Logger::WARNING, $sMessage, $aContext);
+        public static function w(string $sMessage, array $aContext = array()): bool {
+            return self::addRecord(Logger::WARNING, $sMessage, $aContext);
         }
 
         /**
@@ -268,20 +257,20 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function e($sMessage, array $aContext = array()): bool {
-            return self::addRecord(Monolog\Logger::ERROR, $sMessage, $aContext);
+        public static function e(string $sMessage, array $aContext = array()): bool {
+            return self::addRecord(Logger::ERROR, $sMessage, $aContext);
         }
 
         /**
          * Adds a log record at the ERROR level.
          *
          * @param  string    $sMessage   The log message
-         * @param  Exception $oThrowable The exception
+         * @param  Throwable $oThrowable The exception
          * @param  array     $aContext   The log context
          *
          * @return boolean Whether the record has been processed
          */
-        public static function ex($sMessage, Throwable $oThrowable, array $aContext = array()): bool {
+        public static function ex(string $sMessage, Throwable $oThrowable, array $aContext = array()): bool {
             $iTruncate = self::$iStackLimit;
             $aStack    = $oThrowable->getTrace();
             $iStack    = count($aStack);
@@ -315,10 +304,10 @@
                 'context' => self::getContextForOutput()
             ];
 
-            return self::addRecord(Monolog\Logger::ERROR, $sMessage, $aContext);
+            return self::addRecord(Logger::ERROR, $sMessage, $aContext);
         }
 
-        private static function replaceObjects(array $aArgs) {
+        private static function replaceObjects(array $aArgs): array {
             $aOutput = [];
             foreach($aArgs as $sKey => $aArg) {  // Do NOT use a reference here as getTrace returns references to the actual args in the call stack which can then modify the real vars in the stack
                 if (is_object($aArg)) {
@@ -342,8 +331,8 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function c($sMessage, array $aContext = array()): bool {
-            return self::addRecord(Monolog\Logger::CRITICAL, $sMessage, $aContext);
+        public static function c(string $sMessage, array $aContext = array()): bool {
+            return self::addRecord(Logger::CRITICAL, $sMessage, $aContext);
         }
 
         /**
@@ -353,8 +342,8 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function a($sMessage, array $aContext = array()): bool {
-            return self::addRecord(Monolog\Logger::ALERT, $sMessage, $aContext);
+        public static function a(string $sMessage, array $aContext = array()): bool {
+            return self::addRecord(Logger::ALERT, $sMessage, $aContext);
         }
 
         /**
@@ -364,8 +353,8 @@
          * @param  array   $aContext The log context
          * @return boolean Whether the record has been processed
          */
-        public static function em($sMessage, array $aContext = array()): bool {
-            return self::addRecord(Monolog\Logger::EMERGENCY, $sMessage, $aContext);
+        public static function em(string $sMessage, array $aContext = array()): bool {
+            return self::addRecord(Logger::EMERGENCY, $sMessage, $aContext);
         }
 
         /**
@@ -495,11 +484,9 @@
             return self::$sThreadHash;
         }
 
-        /** @var array */
-        private static $aIndices    = [];
+        private static array $aIndices    = [];
 
-        /** @var bool */
-        private static $bJSONParsed = false;
+        private static bool $bJSONParsed = false;
 
         private static function parseJSONBodyForIndices(): void {
             if (self::$bJSONParsed) {
@@ -647,10 +634,10 @@
                 self::getCurrentSpan()
             );
 
-            self::initLogger()->addRecord(Monolog\Logger::INFO, $aMessage['--action'], $aMessage);
+            self::initLogger()->addRecord(Logger::INFO, $aMessage['--action'], $aMessage);
         }
 
-        public static function getContextForOutput() {
+        public static function getContextForOutput(): array {
             return self::$aSpanMetas[self::getCurrentRequestHash()]->Context->all();
         }
     }

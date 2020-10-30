@@ -11,7 +11,7 @@
      * Returns DateTime object with proper microtime
      * @return DateTime
      */
-    function notNowButRightNow() {
+    function notNowButRightNow(): DateTime {
         return DateTime::createFromFormat('U.u', number_format(microtime(true), 6, '.', ''));
     }
 
@@ -40,7 +40,7 @@
      *
      * @return string
      */
-    function minutes_ago(DateTime $oFrom, DateTime $oTo) {
+    function minutes_ago(DateTime $oFrom, DateTime $oTo): string {
         $oDiff  = $oFrom->diff($oTo);
         $iDiff  = $oDiff->d * 24 * 60;
         $iDiff += $oDiff->h * 60;
@@ -65,7 +65,7 @@
 
         $nMS = $nSeconds - floor( $nSeconds );
         $nMSRounded = $iMSPlaces ? round($nMS, $iMSPlaces) : $nMS;
-        $sMS = str_replace( "0.", '', $nMSRounded );
+        $sMS = str_replace( "0.", '', '' . $nMSRounded);
 
         if ( $nSeconds > 3600 )
         {
@@ -73,8 +73,8 @@
         }
         $nSeconds %= 3600;
 
-        return str_pad( $iHours, 2, '0', STR_PAD_LEFT )
-               . gmdate( ':i:s', $nSeconds )
+        return str_pad( '' . $iHours, 2, '0', STR_PAD_LEFT )
+               . gmdate( ':i:s', (int) $nSeconds )
                . ($sMS ? ".$sMS" : '')
             ;
     }

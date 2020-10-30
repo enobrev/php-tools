@@ -3,10 +3,10 @@
 
     /**
      * @param array $aArray
-     * @param array ...$aKeys
+     * @param string[] $aKeys
      * @return array
      */
-    function array_without_keys(array $aArray, ...$aKeys) {
+    function array_without_keys(array $aArray, ...$aKeys): array {
         $aDiff = [];
         foreach($aKeys as $sKey) {
             $aDiff[$sKey] = 1;
@@ -34,7 +34,7 @@
      * @param string $sDelimiter
      * @return array
      */
-    function array_from_path($sPath, $mValue, $sDelimiter = '.') {
+    function array_from_path(string $sPath, $mValue, $sDelimiter = '.'): array {
         $aPath     = explode($sDelimiter, $sPath);
         $aResponse = $mValue;
         while(count($aPath) > 1) {

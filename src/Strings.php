@@ -7,7 +7,6 @@
     use Doctrine\Inflector\Rules\Ruleset;
     use Doctrine\Inflector\Rules\Substitution;
     use Doctrine\Inflector\Rules\Substitutions;
-    use Doctrine\Inflector\Rules\Transformation;
     use Doctrine\Inflector\Rules\Transformations;
     use Doctrine\Inflector\Rules\Word;
 
