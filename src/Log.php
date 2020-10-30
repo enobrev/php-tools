@@ -11,7 +11,7 @@
     use Psr\Http\Message\ServerRequestInterface;
 
     class Log {
-        private static ?Logger $oLog;
+        private static ?Logger $oLog = null;
 
         private static ServerRequestInterface $oServerRequest;
 
@@ -23,7 +23,7 @@
 
         private static bool $bJSONLogs = false;
 
-        private static string $sThreadHash;
+        private static ?string $sThreadHash = null;
 
         private static array $aSpans = [];
 
