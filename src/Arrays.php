@@ -62,7 +62,7 @@
      *
      * @return mixed|null
      */
-    function array_find(array $aArray, callable $fFind) {
+    function array_find(iterable $aArray, callable $fFind) {
         foreach ($aArray as $mItem) {
             if ($fFind($mItem) === true) {
                 return $mItem;
