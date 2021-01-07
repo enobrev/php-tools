@@ -55,3 +55,19 @@
 
         return array_keys($aArray) === range(0, count($aArray) - 1);
     }
+
+    /**
+     * @param array    $aArray
+     * @param callable $fFind
+     *
+     * @return mixed|null
+     */
+    function array_find(array $aArray, callable $fFind) {
+        foreach ($aArray as $mItem) {
+            if ($fFind($mItem) === true) {
+                return $mItem;
+            }
+        }
+
+        return null;
+    }
