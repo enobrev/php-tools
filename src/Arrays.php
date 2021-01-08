@@ -71,3 +71,21 @@
 
         return null;
     }
+
+    /**
+     * Similar to array_find but instead of returning the array item, it returns the callable value
+     * @param iterable $aArray
+     * @param callable $fFind
+     *
+     * @return null
+     */
+    function array_find_value(iterable $aArray, callable $fFind) {
+        foreach ($aArray as $mItem) {
+            $mValue = $fFind($mItem);
+            if ($mValue !== null) {
+                return $mValue;
+            }
+        }
+
+        return null;
+    }
