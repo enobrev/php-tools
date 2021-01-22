@@ -17,3 +17,6 @@
     Log::c('Critical!', ['context' => 'whatever']);
     Log::dt($oTimer);
     Log::summary();
+    Log::d(Log::method('a\\b\\c\\d\\e\\f', 2));
+    Log::d(Log::method('a\\b\\c\\d\\e\\f', 3));
+    Log::d(Log::method('a\\b\\c\\d\\e\\f', 20));

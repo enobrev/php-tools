@@ -204,7 +204,7 @@
         public static function method(string $sMethod, int $iLevels = 1): string {
             $sMethod = str_replace('::', '.', $sMethod);
             $aMethod = explode('\\', $sMethod);
-            $aSliced = array_slice($aMethod, $iLevels);
+            $aSliced = array_slice($aMethod, -$iLevels);
             return implode('.', $aSliced);
         }
 
