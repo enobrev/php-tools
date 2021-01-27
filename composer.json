@@ -40,7 +40,8 @@
             "src/DateTime.php",
             "src/Debugging.php",
             "src/Headers.php",
-            "src/Strings.php"
+            "src/Strings.php",
+            "src/System.php"
         ]
     },
     "require-dev": {
