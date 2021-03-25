@@ -39,27 +39,12 @@
     }
 
     function dbg_nl(...$aArgs): void {
-        $sTitle = '';
-
-        if (count($aArgs) > 1) {
-            $sTitle = array_shift($aArgs) . ': ';
-        }
-
-        if ($sTitle !== '') {
-            if (is_object($aArgs[0])
-            ||  is_array($aArgs[0])) {
-                echo "$sTitle\n";
-            } else {
-                echo $sTitle;
-            }
-        }
-
         foreach ($aArgs as $mArg) {
             if (is_object($mArg)
             ||  is_array($mArg)) {
-                echo print_r($mArg, true);
+                echo print_r($mArg, true) . "\n";
             } else {
-                echo $mArg;
+                echo $mArg . "\n";
             }
         }
     }
