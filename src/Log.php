@@ -56,7 +56,7 @@
                         $oFormatter = new LineFormatter("%context%\n");
                     }
 
-                    $oHandler = new StreamHandler(STDOUT, Logger::DEBUG);
+                    $oHandler = new StreamHandler(fopen('php://stdout', 'w'), Logger::DEBUG);
                     $oHandler->setFormatter($oFormatter);
                     self::$oLog->pushHandler($oHandler);
                 } else {
