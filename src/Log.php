@@ -1,6 +1,7 @@
 <?php
     namespace Enobrev;
 
+    use Monolog\Handler\StreamHandler;
     use Throwable;
 
     use Adbar\Dot;
@@ -22,6 +23,8 @@
         private static bool $bMetrics = false;
 
         private static bool $bJSONLogs = false;
+
+        private static bool $bContained = false;
 
         private static ?string $sThreadHash = null;
 
@@ -46,15 +49,28 @@
 
                 self::$oLog = new Logger(self::$sService);
 
-                if (self::$bJSONLogs) {
-                    $oFormatter = new LineFormatter('@cee: %context%');
+                if (self::$bContained) {
+                    if (self::$bJSONLogs) {
+                        $oFormatter = new LineFormatter("@cee: %context%\n");
+                    } else {
+                        $oFormatter = new LineFormatter("%context%\n");
+                    }
+
+                    $oHandler = new StreamHandler(STDOUT, Logger::DEBUG);
+                    $oHandler->setFormatter($oFormatter);
+                    self::$oLog->pushHandler($oHandler);
                 } else {
-                    $oFormatter = new LineFormatter('%context%');
+                    if (self::$bJSONLogs) {
+                        $oFormatter = new LineFormatter('@cee: %context%');
+                    } else {
+                        $oFormatter = new LineFormatter('%context%');
+                    }
+
+                    $oSyslog = new SyslogHandler('API');
+                    $oSyslog->setFormatter($oFormatter);
+                    self::$oLog->pushHandler($oSyslog);
                 }
 
-                $oSyslog = new SyslogHandler('API');
-                $oSyslog->setFormatter($oFormatter);
-                self::$oLog->pushHandler($oSyslog);
             }
 
             return self::$oLog;
@@ -187,6 +203,10 @@
 
         public static function enableJSON(): void {
             self::$bJSONLogs = true;
+        }
+
+        public static function contained(): void {
+            self::$bContained = true;
         }
 
         public static function setStackLimit(int $iStackLimit): void {
