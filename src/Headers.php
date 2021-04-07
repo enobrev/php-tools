@@ -27,18 +27,25 @@
             $sIP = $_SERVER['LOCAL_ADDR'];
         } else if ($bIsCLI) {
             $sIP = gethostbyname(gethostname());
+        } else if (getenv('HTTP_X_FORWARDED_FOR') && strcasecmp(getenv('HTTP_X_FORWARDED_FOR'), 'unknown')) {
+            $sIP = getenv('HTTP_X_FORWARDED_FOR');
         } else if (isset($_SERVER['HTTP_X_REAL_IP']) && $_SERVER['HTTP_X_REAL_IP'] && strcasecmp($_SERVER['HTTP_X_REAL_IP'], 'unknown')) {
             $sIP = $_SERVER['HTTP_X_REAL_IP']; // explicitly set in nginx load balancer
         } else if (getenv('HTTP_CLIENT_IP') && strcasecmp(getenv('HTTP_CLIENT_IP'), 'unknown')) {
             $sIP = getenv('HTTP_CLIENT_IP');
-        } else if (getenv('HTTP_X_FORWARDED_FOR') && strcasecmp(getenv('HTTP_X_FORWARDED_FOR'), 'unknown')) {
-            $sIP = getenv('HTTP_X_FORWARDED_FOR');
         } else if (getenv('REMOTE_ADDR') && strcasecmp(getenv('REMOTE_ADDR'), 'unknown')) {
             $sIP = getenv('REMOTE_ADDR');
         } else if (isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] && strcasecmp($_SERVER['REMOTE_ADDR'], 'unknown')) {
             $sIP = $_SERVER['REMOTE_ADDR'];
         } else {
             $sIP = 'unknown';
+        }
+
+        if (strpos($sIP, ',') !== false) {
+            $aIP = explode($sIP, ",");
+            $aIP = array_map('trim', $aIP);
+            $aIP = array_filter($aIP);
+            $sIP = array_shift($aIP);
         }
 
         return $sIP;
