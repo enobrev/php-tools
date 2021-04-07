@@ -42,7 +42,7 @@
         }
 
         if ($sIP && strpos($sIP, ',') !== false) {
-            $aIP = explode($sIP, ",");
+            $aIP = explode(",", $sIP);
             $sIP = trim(array_shift($aIP));
         }
 
