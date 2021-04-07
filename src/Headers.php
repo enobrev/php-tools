@@ -41,11 +41,9 @@
             $sIP = 'unknown';
         }
 
-        if (strpos($sIP, ',') !== false) {
+        if ($sIP && strpos($sIP, ',') !== false) {
             $aIP = explode($sIP, ",");
-            $aIP = array_map('trim', $aIP);
-            $aIP = array_filter($aIP);
-            $sIP = array_shift($aIP);
+            $sIP = trim(array_shift($aIP));
         }
 
         return $sIP;
