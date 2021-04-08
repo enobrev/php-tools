@@ -51,9 +51,9 @@
 
                 if (self::$bContained) {
                     if (self::$bJSONLogs) {
-                        $oFormatter = new LineFormatter("[%datetime%] %channel%.%level_name%: %message% %extra% @cee: %context%\n");
+                        $oFormatter = new LineFormatter("%channel%.%level_name%: %extra% @cee: %context%\n");
                     } else {
-                        $oFormatter = new LineFormatter("[%datetime%] %channel%.%level_name%: %message% %extra% %context%\n");
+                        $oFormatter = new LineFormatter("%channel%.%level_name%: %extra% %context%\n");
                     }
 
                     $oHandler = new StreamHandler(fopen('php://stdout', 'w'), Logger::DEBUG);
