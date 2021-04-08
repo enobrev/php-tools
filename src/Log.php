@@ -51,9 +51,9 @@
 
                 if (self::$bContained) {
                     if (self::$bJSONLogs) {
-                        $oFormatter = new LineFormatter("@cee: %context%\n");
+                        $oFormatter = new LineFormatter("[%datetime%] %channel%.%level_name%: %message% %extra% @cee: %context%\n");
                     } else {
-                        $oFormatter = new LineFormatter("%context%\n");
+                        $oFormatter = new LineFormatter("[%datetime%] %channel%.%level_name%: %message% %extra% %context%\n");
                     }
 
                     $oHandler = new StreamHandler(fopen('php://stdout', 'w'), Logger::DEBUG);
@@ -91,7 +91,7 @@
             self::incrementCurrentIndex();
 
             $aLog    = array_merge(
-                self::prepareContext($sMessage, $aContext),
+                self::prepareContext($sMessage, $aContext, $iLevel),
                 self::getCurrentSpan()
             );
 
@@ -103,13 +103,18 @@
          * @param array  $aContext
          * @return array
          */
-        private static function prepareContext(string $sMessage, array $aContext = []): array {
+        private static function prepareContext(string $sMessage, array $aContext = [], ?int $iLevel = null): array {
             self::$iGlobalIndex++;
 
             $oLog = new Dot([
                 '--action' => $sMessage,
                 '--i'      => self::$iGlobalIndex
             ]);
+
+            if ($iLevel) {
+                $oLog->set('--s', $iLevel);
+                $oLog->set('--sn', Logger::getLevelName($iLevel));
+            }
 
             $sRequestHash  = self::getCurrentRequestHash();
 
@@ -655,7 +660,7 @@
                     [
                         '--ms'      => $iTimer,
                         '--summary' => true,
-                        '--span'    => self::$aSpanMetas[self::getCurrentRequestHash()]->getMessage(self::$sService)
+                        '--span'    => self::$aSpanMetas[self::getCurrentRequestHash()]->getMessage(self::$sService),
                     ]
                 ),
                 self::getCurrentSpan()
