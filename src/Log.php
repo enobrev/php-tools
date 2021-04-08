@@ -58,6 +58,7 @@
 
                     $oHandler = new StreamHandler(fopen('php://stdout', 'wb'), Logger::DEBUG);
                     $oHandler->setFormatter($oFormatter);
+                    
                     self::$oLog->pushHandler($oHandler);
                 } else {
                     if (self::$bJSONLogs) {
