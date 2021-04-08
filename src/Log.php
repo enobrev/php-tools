@@ -51,14 +51,15 @@
 
                 if (self::$bContained) {
                     if (self::$bJSONLogs) {
-                        $oFormatter = new LineFormatter("%datetime% %level_name% @cee: %context%\n", DATE_ATOM);
+//                        $oFormatter = new LineFormatter("%datetime% %level_name% @cee: %context%\n", DATE_ATOM); // Requires mmnormalize in rsyslog sidecar
+                        $oFormatter = new LineFormatter("@cee: %context%\n", DATE_ATOM);
                     } else {
                         $oFormatter = new LineFormatter("%datetime% %level_name% %extra% %context%\n", DATE_ATOM);
                     }
 
                     $oHandler = new StreamHandler(fopen('php://stdout', 'wb'), Logger::DEBUG);
                     $oHandler->setFormatter($oFormatter);
-                    
+
                     self::$oLog->pushHandler($oHandler);
                 } else {
                     if (self::$bJSONLogs) {
