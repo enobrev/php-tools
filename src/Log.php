@@ -24,6 +24,8 @@
 
         private static bool $bJSONLogs = false;
 
+        private static bool $bCEELogs = false;
+
         private static bool $bContained = false;
 
         private static ?string $sThreadHash = null;
@@ -51,24 +53,29 @@
 
                 if (self::$bContained) {
                     if (self::$bJSONLogs) {
-//                        $oFormatter = new LineFormatter("%datetime% %level_name% @cee: %context%\n", DATE_ATOM); // Requires mmnormalize in rsyslog sidecar
-                        $oFormatter = new LineFormatter("@cee: %context%\n", DATE_ATOM);
+                        //$sFormat = "%datetime% %level_name% @cee: %context%\n"; // Requires mmnormalize in rsyslog sidecar
+
+                        $sFormat = "%context%\n";
+                        if (self::$bCEELogs) {
+                            $sFormat = "@cee: $sFormat";
+                        }
                     } else {
-                        $oFormatter = new LineFormatter("%datetime% %level_name% %extra% %context%\n", DATE_ATOM);
+                        $sFormat = "%datetime% %level_name% %extra% %context%\n";
                     }
 
-                    $oHandler = new StreamHandler(fopen('php://stdout', 'wb'), Logger::DEBUG);
+                    $oFormatter = new LineFormatter($sFormat, DATE_ATOM);
+                    $oHandler   = new StreamHandler(fopen('php://stdout', 'wb'), Logger::DEBUG);
                     $oHandler->setFormatter($oFormatter);
 
                     self::$oLog->pushHandler($oHandler);
                 } else {
-                    if (self::$bJSONLogs) {
-                        $oFormatter = new LineFormatter('@cee: %context%');
-                    } else {
-                        $oFormatter = new LineFormatter('%context%');
+                    $sFormat = '%context%';
+                    if (self::$bJSONLogs && self::$bCEELogs) {
+                        $sFormat = "@cee: $sFormat";
                     }
 
-                    $oSyslog = new SyslogHandler('API');
+                    $oFormatter = new LineFormatter($sFormat);
+                    $oSyslog    = new SyslogHandler('API');
                     $oSyslog->setFormatter($oFormatter);
                     self::$oLog->pushHandler($oSyslog);
                 }
@@ -206,6 +213,10 @@
 
         private static function getCurrentSpan(): array {
             return self::$aSpans[count(self::$aSpans) - 1];
+        }
+
+        public static function enableCEE(): void {
+            self::$bCEELogs = true;
         }
 
         public static function enableJSON(): void {
