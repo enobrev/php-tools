@@ -12,6 +12,27 @@
     use Psr\Http\Message\ServerRequestInterface;
 
     class Log {
+
+        public const EMERGENCY  = 0;
+        public const ALERT      = 1;
+        public const CRITICAL   = 2;
+        public const ERROR      = 3;
+        public const WARNING    = 4;
+        public const NOTICE     = 5;
+        public const INFO       = 6;
+        public const DEBUG      = 7;
+
+        protected static $aLevels = [
+            self::EMERGENCY => 'emergency',
+            self::ALERT     => 'alert',
+            self::CRITICAL  => 'critical',
+            self::ERROR     => 'error',
+            self::WARNING   => 'warning',
+            self::NOTICE    => 'notice',
+            self::INFO      => 'info',
+            self::DEBUG     => 'debug',
+        ];
+
         private static ?Logger $oLog = null;
 
         private static ServerRequestInterface $oServerRequest;
@@ -64,7 +85,7 @@
                     }
 
                     $oFormatter = new LineFormatter($sFormat, DATE_ATOM);
-                    $oHandler   = new StreamHandler(fopen('php://stdout', 'wb'), Logger::DEBUG);
+                    $oHandler   = new StreamHandler(fopen('php://stdout', 'wb'), self::DEBUG);
                     $oHandler->setFormatter($oFormatter);
 
                     self::$oLog->pushHandler($oHandler);
@@ -83,6 +104,10 @@
             }
 
             return self::$oLog;
+        }
+
+        public static function getLevelName(int $iLevel): string {
+            return self::$aLevels[$iLevel];
         }
 
         /**
@@ -122,7 +147,7 @@
 
             if ($iLevel) {
                 $oLog->set('--s', $iLevel);
-                $oLog->set('--sn', Logger::getLevelName($iLevel));
+                $oLog->set('--sn', strtolower(self::getLevelName($iLevel)));
             }
 
             $sRequestHash  = self::getCurrentRequestHash();
@@ -259,7 +284,7 @@
                 return false;
             }
 
-            return self::addRecord(Logger::DEBUG, $sMessage, $aContext);
+            return self::addRecord(self::DEBUG, $sMessage, $aContext);
         }
 
         /**
@@ -270,7 +295,7 @@
          * @return boolean Whether the record has been processed
          */
         public static function i(string $sMessage, array $aContext = array()): bool {
-            return self::addRecord(Logger::INFO, $sMessage, $aContext);
+            return self::addRecord(self::INFO, $sMessage, $aContext);
         }
 
         /**
@@ -281,7 +306,7 @@
          * @return boolean Whether the record has been processed
          */
         public static function n(string $sMessage, array $aContext = array()): bool {
-            return self::addRecord(Logger::NOTICE, $sMessage, $aContext);
+            return self::addRecord(self::NOTICE, $sMessage, $aContext);
         }
 
         /**
@@ -292,7 +317,7 @@
          * @return boolean Whether the record has been processed
          */
         public static function w(string $sMessage, array $aContext = array()): bool {
-            return self::addRecord(Logger::WARNING, $sMessage, $aContext);
+            return self::addRecord(self::WARNING, $sMessage, $aContext);
         }
 
         /**
@@ -303,7 +328,7 @@
          * @return boolean Whether the record has been processed
          */
         public static function e(string $sMessage, array $aContext = array()): bool {
-            return self::addRecord(Logger::ERROR, $sMessage, $aContext);
+            return self::addRecord(self::ERROR, $sMessage, $aContext);
         }
 
         /**
@@ -349,7 +374,7 @@
                 'context' => self::getContextForOutput()
             ];
 
-            return self::addRecord(Logger::ERROR, $sMessage, $aContext);
+            return self::addRecord(self::ERROR, $sMessage, $aContext);
         }
 
         private static function replaceObjects(array $aArgs): array {
@@ -377,7 +402,7 @@
          * @return boolean Whether the record has been processed
          */
         public static function c(string $sMessage, array $aContext = array()): bool {
-            return self::addRecord(Logger::CRITICAL, $sMessage, $aContext);
+            return self::addRecord(self::CRITICAL, $sMessage, $aContext);
         }
 
         /**
@@ -388,7 +413,7 @@
          * @return boolean Whether the record has been processed
          */
         public static function a(string $sMessage, array $aContext = array()): bool {
-            return self::addRecord(Logger::ALERT, $sMessage, $aContext);
+            return self::addRecord(self::ALERT, $sMessage, $aContext);
         }
 
         /**
@@ -399,7 +424,7 @@
          * @return boolean Whether the record has been processed
          */
         public static function em(string $sMessage, array $aContext = array()): bool {
-            return self::addRecord(Logger::EMERGENCY, $sMessage, $aContext);
+            return self::addRecord(self::EMERGENCY, $sMessage, $aContext);
         }
 
         /**
@@ -674,12 +699,13 @@
                         '--ms'      => $iTimer,
                         '--summary' => true,
                         '--span'    => self::$aSpanMetas[self::getCurrentRequestHash()]->getMessage(self::$sService),
-                    ]
+                    ],
+                    self::INFO
                 ),
                 self::getCurrentSpan()
             );
 
-            self::initLogger()->addRecord(Logger::INFO, $aMessage['--action'], $aMessage);
+            self::initLogger()->addRecord(self::INFO, $aMessage['--action'], $aMessage);
         }
 
         public static function getContextForOutput(): array {
