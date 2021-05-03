@@ -139,7 +139,7 @@
             return self::initLogger()->addRecord($iLevel, $sMessage, $aLog);
         }
 
-        private static function getLevelName(int $iLevel): int {
+        private static function getLevelName(int $iLevel): string {
             return self::$aLevelNames[self::getLevel($iLevel)];
         }
 
