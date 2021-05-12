@@ -263,8 +263,8 @@
             self::$bJSONLogs = true;
         }
 
-        public static function contained(): void {
-            self::$bContained = true;
+        public static function contained(bool $bContained = true): void {
+            self::$bContained = $bContained;
         }
 
         public static function setStackLimit(int $iStackLimit): void {
