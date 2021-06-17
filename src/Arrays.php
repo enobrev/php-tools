@@ -73,6 +73,22 @@
     }
 
     /**
+     * @param array    $aArray
+     * @param callable $fFind
+     *
+     * @return mixed|null
+     */
+    function array_find_index(iterable $aArray, callable $fFind) {
+        foreach ($aArray as $iIndex => $mItem) {
+            if ($fFind($mItem) === true) {
+                return $iIndex;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Similar to array_find but instead of returning the array item, it returns the callable value
      * @param iterable $aArray
      * @param callable $fFind
