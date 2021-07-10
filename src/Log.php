@@ -286,6 +286,13 @@
             return implode('.', $aSliced);
         }
 
+        public static function chunked(int $iSeverity, string $sMessage, array $aContext, $iChunkSize = 500) {
+            $aChunks = array_chunk($aContext, $iChunkSize);
+            foreach($aChunks as $aChunk) {
+                self::addRecord($iSeverity, $sMessage, ['chunked' => $aChunk]);
+            }
+        }
+
         /**
          * Adds a log record at the DEBUG level.
          *
