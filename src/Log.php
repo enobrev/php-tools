@@ -44,6 +44,17 @@
             self::DEBUG     => 'debug',
         ];
 
+        protected static $aLookupLevels = [
+            self::EMERGENCY => Logger::EMERGENCY,
+            self::ALERT     => Logger::ALERT,
+            self::CRITICAL  => Logger::CRITICAL,
+            self::ERROR     => Logger::ERROR,
+            self::WARNING   => Logger::WARNING,
+            self::NOTICE    => Logger::NOTICE,
+            self::INFO      => Logger::INFO,
+            self::DEBUG     => Logger::DEBUG,
+        ];
+
         private static ?Logger $oLog = null;
 
         private static ServerRequestInterface $oServerRequest;
@@ -289,7 +300,7 @@
         public static function chunked(int $iSeverity, string $sMessage, array $aContext, $iChunkSize = 500) {
             $aChunks = array_chunk($aContext, $iChunkSize);
             foreach($aChunks as $aChunk) {
-                self::addRecord($iSeverity, $sMessage, ['chunked' => $aChunk]);
+                self::addRecord(self::$aLookupLevels[$iSeverity], $sMessage, ['chunked' => $aChunk]);
             }
         }
 
