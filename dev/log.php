@@ -3,6 +3,7 @@
 
     require __DIR__ . '/../vendor/autoload.php';
 
+    Log::contained(true);
     Log::setPurpose('Testing Log!');
     $oTimer = Log::startTimer('test');
     Log::justAddContext(['#persist' => 'persisted']);
@@ -15,6 +16,7 @@
     Log::e('Error!', ['context' => 'whatever']);
     Log::ex('Error!', new \Exception('Error!'), ['context' => 'whatever']);
     Log::c('Critical!', ['context' => 'whatever']);
+    Log::chunked(Log::DEBUG, 'Debug Chunked', range(10, 100, 10), 3);
     Log::dt($oTimer);
     Log::summary();
     Log::d(Log::method('a\\b\\c\\d\\e\\f', 2));
