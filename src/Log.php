@@ -298,9 +298,10 @@
         }
 
         public static function chunked(int $iSeverity, string $sMessage, array $aContext, $iChunkSize = 500) {
+            $iLevel  = self::$aLookupLevels[$iSeverity];
             $aChunks = array_chunk($aContext, $iChunkSize);
             foreach($aChunks as $aChunk) {
-                self::addRecord(self::$aLookupLevels[$iSeverity], $sMessage, ['chunked' => $aChunk]);
+                self::addRecord($iLevel, $sMessage, ['chunked' => $aChunk]);
             }
         }
 
