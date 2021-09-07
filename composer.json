@@ -28,7 +28,7 @@
         "adbario/php-dot-notation": "~2.2",
         "doctrine/inflector": "^2.0",
         "laminas/laminas-diactoros": "^2.2",
-        "laminas/laminas-httphandlerrunner": "^1.1",
+        "laminas/laminas-httphandlerrunner": "^2.0",
         "monolog/monolog": "^2.0"
     },
     "autoload": {
