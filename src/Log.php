@@ -510,13 +510,13 @@
         /**
          * Sets the Parent Hash to the current Hash, and then resets the Request Hash
          */
-        public static function startChildRequest(): void {
+        public static function startChildRequest(?string $sThreadHash = null, ?string $sParentHash = null): void {
             $aUser  = [];
             if (self::$aSpanMetas[self::getCurrentRequestHash()]->Context->has('user')) {
                 $aUser = self::$aSpanMetas[self::getCurrentRequestHash()]->Context->get('user');
             }
 
-            self::initSpan(self::$oServerRequest, $aUser);
+            self::initSpan(self::$oServerRequest, $aUser, $sThreadHash, $sParentHash);
         }
 
         /**
@@ -659,9 +659,11 @@
 
         /**
          * @param ServerRequestInterface $oRequest
-         * @param array $aUser
+         * @param array                  $aUser
+         * @param string|null            $sIncomingThreadHash
+         * @param string|null            $sIncomingParentHash
          */
-        public static function initSpan(ServerRequestInterface $oRequest, array $aUser = []): void {
+        public static function initSpan(ServerRequestInterface $oRequest, array $aUser = [], ?string $sIncomingThreadHash = null, ?string $sIncomingParentHash = null): void {
             self::$oServerRequest = $oRequest;
 
             $oStartTime          = notNowButRightNow();
@@ -692,11 +694,13 @@
 
             self::$aSpanMetas[$sRequestHash] = new SpanMeta($oStartTime, self::$bMetrics ? SpanMeta::METRICS_ON : SpanMeta::METRICS_OFF);
 
-            if ($sThreadHash = self::getThreadHash()) {
+            if ($sThreadHash = $sIncomingThreadHash ?? self::getThreadHash()) {
                 $aSpan['--t'] = $sThreadHash;
             }
 
-            if (count(self::$aSpans) > 0) {
+            if ($sIncomingParentHash) {
+                $aSpan['--p'] = $sIncomingParentHash;
+            } else if (count(self::$aSpans) > 0) {
                 $aSpan['--p'] = self::$aSpans[count(self::$aSpans) - 1]['--r'];
             } else if ($sParentHash = self::getParentHash()) {
                 $aSpan['--p'] = $sParentHash;
