@@ -105,3 +105,24 @@
 
         return null;
     }
+
+    /**
+     * Group Multi-Dimensional Array by the key of each inner array
+     * @param iterable $aArray
+     * @param string   $sGroupKey
+     *
+     * @return array
+     */
+    function array_group_by_key(iterable $aArray, string $sGroupKey) {
+        $aGrouped = [];
+        foreach($aArray as $sKey => $aValue) {
+            $sGroupValue = $aValue[$sGroupKey] ?? null;
+            if (!isset($aGrouped[$sGroupValue])) {
+                $aGrouped[$sGroupValue] = [];
+            }
+
+            $aGrouped[$sGroupValue][] = $aValue;
+        }
+
+        return $aGrouped;
+    }
