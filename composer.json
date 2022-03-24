@@ -20,12 +20,16 @@
         {
             "type": "vcs",
             "url": "https://github.com/enobrev/php-tools"
+        },
+        {
+            "type": "git",
+            "url":  "https://github.com/enobrev/php-dot-notation.git"
         }
     ],
     "require": {
         "php": ">=7.4",
         "ext-json": "*",
-        "adbario/php-dot-notation": "~2.2",
+        "adbario/php-dot-notation": "2.x-dev",
         "doctrine/inflector": "^2.0",
         "laminas/laminas-diactoros": "^2.2",
         "laminas/laminas-httphandlerrunner": "^2.0",
