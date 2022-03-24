@@ -71,7 +71,7 @@
         {
             $iHours = floor( $nSeconds / 3600 );
         }
-        $nSeconds %= 3600;
+        $nSeconds = (int) $nSeconds % 3600;
 
         return str_pad( '' . $iHours, 2, '0', STR_PAD_LEFT )
                . gmdate( ':i:s', (int) $nSeconds )
