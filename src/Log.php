@@ -88,7 +88,7 @@
         /**
          * @return Logger
          */
-        private static function initLogger(): Logger {
+        public static function initLogger(): Logger {
             if (self::$oLog === null) {
                 register_shutdown_function([self::class, 'summary']);
 
