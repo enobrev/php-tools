@@ -235,6 +235,10 @@
             self::$aSpanMetas[self::getCurrentRequestHash()]->setError($bIsError);
         }
 
+        public static function getPurpose(): string {
+            self::$aSpanMetas[self::getCurrentRequestHash()]->getName();
+        }
+
         /**
          * @param string $sPurpose
          */

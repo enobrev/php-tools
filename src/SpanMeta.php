@@ -36,6 +36,10 @@
             $this->Timer    = new Timer();
         }
 
+        public function getName(string $sName):string {
+            return $this->sName;
+        }
+
         public function setName(string $sName):void {
             $this->sName = $sName;
         }
