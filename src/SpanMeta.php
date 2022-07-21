@@ -36,7 +36,7 @@
             $this->Timer    = new Timer();
         }
 
-        public function getName(string $sName):string {
+        public function getName():string {
             return $this->sName;
         }
 
