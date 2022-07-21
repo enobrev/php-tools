@@ -236,7 +236,7 @@
         }
 
         public static function getPurpose(): string {
-            self::$aSpanMetas[self::getCurrentRequestHash()]->getName();
+            return self::$aSpanMetas[self::getCurrentRequestHash()]->getName();
         }
 
         /**

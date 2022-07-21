@@ -15,7 +15,7 @@
         // const VERSION = 1: included tags, which were not used
         private const VERSION = 2;
 
-        private string $sName;
+        private string $sName = '';
 
         private bool $bMetrics;
 
@@ -28,7 +28,6 @@
         public Timer $Timer;
 
         public function __construct(DateTime $oStart, $sMetrics = self::METRICS_OFF) {
-            $this->sName    = '';
             $this->bMetrics = $sMetrics === self::METRICS_ON;
             $this->oStart   = $oStart;
             $this->bError   = false;
