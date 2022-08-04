@@ -27,6 +27,7 @@
         "ext-json": "*",
         "adbario/php-dot-notation": "^3.1",
         "doctrine/inflector": "^2.0",
+        "filp/whoops": "^2.14",
         "laminas/laminas-diactoros": "^2.2",
         "laminas/laminas-httphandlerrunner": "^2.0",
         "monolog/monolog": "^2.0"

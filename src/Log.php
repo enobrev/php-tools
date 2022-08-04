@@ -379,25 +379,12 @@
          * @return boolean Whether the record has been processed
          */
         public static function ex(string $sMessage, Throwable $oThrowable, array $aContext = array()): bool {
-            $iTruncate = self::$iStackLimit;
-            $aStack    = $oThrowable->getTrace();
-            $iStack    = count($aStack);
-
-            if ($iStack > $iTruncate) {
-                $iRemaining = $iStack - $iTruncate;
-                $aStack = array_slice($aStack, 0, 5);
-                $aStack[] = [
-                    "__TRUNCATED__" => "$iRemaining entries cut from $iStack stack entries for brevity"
-                ];
-            }
-
-            $aStackCopy = [];
-            foreach($aStack as $aItem) { // Do NOT use a reference here as getTrace returns references to the actual args in the call stack which can then modify the real vars in the stack
-                if (isset($aItem['args'])) {
-                    $aItem['args'] = self::replaceObjects($aItem['args']);
-                }
-                $aStackCopy[] = $aItem;
-            }
+            $oWhoops = new \Whoops\Run;
+            $oWhoops->allowQuit(false);
+            $oWhoops->writeToOutput(false);
+            $oWhoopsHandler = new \Whoops\Handler\JsonResponseHandler();
+            $oWhoopsHandler->addTraceToOutput(true);
+            $oWhoops->pushHandler($oWhoopsHandler);
 
             $aContext['--exception'] = [
                 'type'    => get_class($oThrowable),
@@ -405,7 +392,7 @@
                 'message' => $oThrowable->getMessage(),
                 'file'    => $oThrowable->getFile(),
                 'line'    => $oThrowable->getLine(),
-                'stack'   => json_encode($aStackCopy)
+                'stack'   => $oWhoops->handleException($oThrowable)
             ];
 
             $aContext['--span'] = [
