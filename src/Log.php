@@ -468,20 +468,23 @@
         }
 
         /**
-         * @param string $sLabel
-         * @return TimeKeeper
+         * @param TimeKeeper $oTimer
+         * @param array      $aContext
          */
-        public static function startTimer(string $sLabel): TimeKeeper {
-            return self::$aSpanMetas[self::getCurrentRequestHash()]->Timer->start($sLabel);
+        public static function et(TimeKeeper $oTimer, array $aContext = []): void {
+            $aContext['--ms'] = $oTimer->stop();
+
+            self::e($oTimer->label(), $aContext);
         }
 
         /**
          * @param string $sLabel
-         *
-         * @return float|null
+         * @return TimeKeeper
          */
-        public static function stopTimer(string $sLabel): ?float {
-            return self::$aSpanMetas[self::getCurrentRequestHash()]->Timer->stop($sLabel);
+        public static function startTimer(string $sLabel): TimeKeeper {
+            $oTimer = new TimeKeeper($sLabel);
+            $oTimer->start();
+            return $oTimer;
         }
 
         /**
@@ -514,7 +517,6 @@
          * Retrieves the previous request hash
          */
         public static function endChildRequest(): void {
-            self::stopTimer('_REQUEST');
             self::summary();
             array_pop(self::$aSpans);
         }
@@ -683,7 +685,7 @@
                 '--r'      => $sRequestHash
             ];
 
-            self::$aSpanMetas[$sRequestHash] = new SpanMeta($oStartTime, self::$bMetrics ? SpanMeta::METRICS_ON : SpanMeta::METRICS_OFF);
+            self::$aSpanMetas[$sRequestHash] = new SpanMeta($oStartTime);
 
             if ($sThreadHash = $sIncomingThreadHash ?? self::getThreadHash()) {
                 $aSpan['--t'] = $sThreadHash;
@@ -710,8 +712,6 @@
             }
 
             self::$aSpans[] = $aSpan;
-
-            self::startTimer('_REQUEST');
         }
 
         /**
@@ -720,12 +720,11 @@
          */
         public static function summary(string $sOverrideName = 'Summary'): void {
             self::incrementCurrentIndex();
-            $iTimer   = self::stopTimer('_REQUEST');
             $aMessage = array_merge(
                 self::prepareContext(
                     self::$sService . '.' . $sOverrideName,
                     [
-                        '--ms'      => $iTimer,
+                        '--ms'      => self::$aSpanMetas[self::getCurrentRequestHash()]->Timer->stop(),
                         '--summary' => true,
                         '--span'    => self::$aSpanMetas[self::getCurrentRequestHash()]->getMessage(self::$sService),
                     ],

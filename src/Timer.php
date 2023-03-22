@@ -1,6 +1,9 @@
 <?php
     namespace Enobrev;
 
+    /**
+     * @deprecated for causing memory leaks
+     */
     class Timer {
         /**
          * @var TimeKeeper[][]
@@ -51,37 +54,13 @@
 
         /**
          * @param string $sLabel
-         * @return TimeKeeper|null
-         */
-        public function &get(string $sLabel): ?TimeKeeper {
-            if (!isset($this->aTimers[$sLabel])) {
-                return $this->start($sLabel);
-            }
-
-            $oTimer  = null;
-            $iTimers = count($this->aTimers[$sLabel]);
-            if ($iTimers > 0) {
-                $oTimer = &$this->aTimers[$sLabel][$iTimers - 1];
-            }
-
-            return $oTimer;
-        }
-
-        /**
-         * @param string $sLabel
          * @return TimeKeeper
          */
         public function &start(string $sLabel): TimeKeeper {
-            if (!isset($this->aTimers[$sLabel])) {
-                $this->aTimers[$sLabel] = [];
-            }
+            $this->aTimers[$sLabel] = new TimeKeeper($sLabel);
+            $this->aTimers[$sLabel]->start();
 
-            $oTimer = new TimeKeeper($sLabel);
-            $oTimer->start();
-
-            $this->aTimers[$sLabel][] = &$oTimer;
-
-            return $oTimer;
+            return $this->aTimers[$sLabel];
         }
 
         /**
@@ -89,11 +68,10 @@
          * @return float|null
          */
         public function stop(string $sLabel): ?float {
-            $oTimeKeeper = &$this->get($sLabel);
-            if ($oTimeKeeper) {
-                return $oTimeKeeper->stop();
+            if (!isset($this->aTimers[$sLabel])) {
+                return null;
             }
 
-            return null;
+            return $this->aTimers[$sLabel]->stop();
         }
     }

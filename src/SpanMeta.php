@@ -1,23 +1,17 @@
 <?php
-
-
     namespace Enobrev;
 
     use DateTime;
     use Adbar\Dot;
 
     class SpanMeta {
-        public const METRICS_ON  = 'metrics-on';
-        public const METRICS_OFF = 'metrics-off';
-
         private const TIMESTAMP_FORMAT = DATE_RFC3339_EXTENDED;
 
-        // const VERSION = 1: included tags, which were not used
-        private const VERSION = 2;
+//      private const VERSION = 1: included tags, which were not used
+//      private const VERSION = 2; included metrics and a memory-leaking timer
+        private const VERSION = 3;
 
         private string $sName = '';
-
-        private bool $bMetrics;
 
         private DateTime $oStart;
 
@@ -25,14 +19,14 @@
 
         public Dot $Context;
 
-        public Timer $Timer;
+        public TimeKeeper $Timer;
 
-        public function __construct(DateTime $oStart, $sMetrics = self::METRICS_OFF) {
-            $this->bMetrics = $sMetrics === self::METRICS_ON;
+        public function __construct(DateTime $oStart) {
             $this->oStart   = $oStart;
             $this->bError   = false;
             $this->Context  = new Dot();
-            $this->Timer    = new Timer();
+            $this->Timer    = new TimeKeeper('_REQUEST');
+            $this->Timer->start();
         }
 
         public function getName():string {
@@ -60,8 +54,7 @@
                 'start_timestamp' => $this->oStart->format(self::TIMESTAMP_FORMAT),
                 'end_timestamp'   => notNowButRightNow()->format(self::TIMESTAMP_FORMAT),
                 'error'           => $this->bError,
-                'context'         => $this->Context->all(),
-                'metrics'         => $this->bMetrics ? json_encode($this->Timer->stats()) : null
+                'context'         => $this->Context->all()
             ];
         }
     }
